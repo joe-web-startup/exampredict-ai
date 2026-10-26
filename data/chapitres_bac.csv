@@ -65,3 +65,152 @@ physique-chimie,2026,1,reforme,3,Chimie organique,Chimie organique
 physique-chimie,2026,2,reforme,1,Cinétique chimique,Cinétique chimique
 physique-chimie,2026,2,reforme,2,Thermodynamique,Thermodynamique
 physique-chimie,2026,2,reforme,3,Mécanique spatiale,Mécanique
+maths,2010,1,ancien,1,Équations différentielles et intégrales,Équations différentielles
+maths,2010,1,ancien,1,Équations différentielles et intégrales,Intégrales
+maths,2010,1,ancien,2,Suites numériques,Suites
+maths,2010,1,ancien,3,Probabilités,Probabilités et dénombrement
+maths,2010,1,ancien,4,Nombres complexes,Nombres complexes
+maths,2011,1,ancien,1,Probabilités,Probabilités et dénombrement
+maths,2011,1,ancien,2,Nombres complexes,Nombres complexes
+maths,2011,1,ancien,3,Analyse de fonctions,Fonctions
+maths,2011,1,ancien,4,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2012,1,ancien,1,Fonctions,Fonctions
+maths,2012,1,ancien,2,Probabilités,Probabilités et dénombrement
+maths,2012,1,ancien,3,Suites et intégrales,Suites
+maths,2012,1,ancien,3,Suites et intégrales,Intégrales
+maths,2012,1,ancien,4,Nombres complexes,Nombres complexes
+maths,2013,1,ancien,1,Analyse de fonctions,Fonctions
+maths,2013,1,ancien,2,Probabilités,Probabilités et dénombrement
+maths,2013,1,ancien,3,Suites numériques,Suites
+maths,2013,1,ancien,4,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2014,1,ancien,1,Fonctions et intégrales,Fonctions
+maths,2014,1,ancien,1,Fonctions et intégrales,Intégrales
+maths,2014,1,ancien,2,Probabilités,Probabilités et dénombrement
+maths,2014,1,ancien,3,Nombres complexes,Nombres complexes
+maths,2014,1,ancien,4,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2015,1,ancien,1,Probabilités,Probabilités et dénombrement
+maths,2015,1,ancien,2,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2015,1,ancien,3,Nombres complexes,Nombres complexes
+maths,2015,1,ancien,4,Fonctions et intégrales,Fonctions
+maths,2015,1,ancien,4,Fonctions et intégrales,Intégrales
+maths,2016,1,ancien,1,Probabilités,Probabilités et dénombrement
+maths,2016,1,ancien,2,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2016,1,ancien,3,Fonctions et suites,Fonctions
+maths,2016,1,ancien,3,Fonctions et suites,Suites
+maths,2016,1,ancien,4,Nombres complexes,Nombres complexes
+maths,2017,1,ancien,1,Fonctions,Fonctions
+maths,2017,1,ancien,2,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2017,1,ancien,3,Nombres complexes,Nombres complexes
+maths,2017,1,ancien,4,Probabilités et suites,Probabilités et dénombrement
+maths,2017,1,ancien,4,Probabilités et suites,Suites
+maths,2018,1,ancien,1,Fonctions exponentielles,Fonctions
+maths,2018,1,ancien,2,Probabilités,Probabilités et dénombrement
+maths,2018,1,ancien,3,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2018,1,ancien,4,Nombres complexes et suites,Nombres complexes
+maths,2018,1,ancien,4,Nombres complexes et suites,Suites
+maths,2019,1,ancien,1,Fonctions et intégrales,Fonctions
+maths,2019,1,ancien,1,Fonctions et intégrales,Intégrales
+maths,2019,1,ancien,2,Probabilités et suites,Probabilités et dénombrement
+maths,2019,1,ancien,2,Probabilités et suites,Suites
+maths,2019,1,ancien,3,Nombres complexes,Nombres complexes
+maths,2019,1,ancien,4,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2022,1,reforme,1,Probabilités,Probabilités et dénombrement
+maths,2022,1,reforme,2,Suites numériques,Suites
+maths,2022,1,reforme,3,Fonctions et intégrales,Fonctions
+maths,2022,1,reforme,3,Fonctions et intégrales,Intégrales
+maths,2022,1,reforme,4,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2023,1,reforme,1,Probabilités,Probabilités et dénombrement
+maths,2023,1,reforme,2,Suites numériques,Suites
+maths,2023,1,reforme,3,Fonctions et intégrales,Fonctions
+maths,2023,1,reforme,3,Fonctions et intégrales,Intégrales
+maths,2023,1,reforme,4,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2024,1,reforme,1,Suites et fonctions,Suites
+maths,2024,1,reforme,1,Suites et fonctions,Fonctions
+maths,2024,1,reforme,2,Probabilités,Probabilités et dénombrement
+maths,2024,1,reforme,3,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2024,1,reforme,4,Fonctions et intégrales,Fonctions
+maths,2024,1,reforme,4,Fonctions et intégrales,Intégrales
+maths,2024,2,reforme,1,Probabilités,Probabilités et dénombrement
+maths,2024,2,reforme,2,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2024,2,reforme,3,Suites numériques,Suites
+maths,2024,2,reforme,4,Fonctions et intégrales,Fonctions
+maths,2024,2,reforme,4,Fonctions et intégrales,Intégrales
+maths,2025,1,reforme,1,Probabilités,Probabilités et dénombrement
+maths,2025,1,reforme,2,Fonctions logarithmes,Fonctions
+maths,2025,1,reforme,3,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2025,1,reforme,4,Suites et équations différentielles,Suites
+maths,2025,1,reforme,4,Suites et équations différentielles,Équations différentielles
+maths,2025,2,reforme,1,Probabilités,Probabilités et dénombrement
+maths,2025,2,reforme,2,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2025,2,reforme,3,Suites et fonctions,Suites
+maths,2025,2,reforme,3,Suites et fonctions,Fonctions
+maths,2025,2,reforme,4,Fonctions exponentielles et intégrales,Fonctions
+maths,2025,2,reforme,4,Fonctions exponentielles et intégrales,Intégrales
+maths,2026,1,reforme,1,Probabilités,Probabilités et dénombrement
+maths,2026,1,reforme,2,Géométrie et dénombrement,Géométrie dans l'espace
+maths,2026,1,reforme,2,Géométrie et dénombrement,Probabilités et dénombrement
+maths,2026,1,reforme,3,Équations différentielles et suites,Équations différentielles
+maths,2026,1,reforme,3,Équations différentielles et suites,Suites
+maths,2026,1,reforme,4,Fonctions logarithmes et intégrales,Fonctions
+maths,2026,1,reforme,4,Fonctions logarithmes et intégrales,Intégrales
+maths,2026,2,reforme,1,Géométrie dans l'espace,Géométrie dans l'espace
+maths,2026,2,reforme,2,Suites et équations différentielles,Suites
+maths,2026,2,reforme,2,Suites et équations différentielles,Équations différentielles
+maths,2026,2,reforme,3,Probabilités,Probabilités et dénombrement
+maths,2026,2,reforme,4,Fonctions exponentielles et intégrales,Fonctions
+maths,2026,2,reforme,4,Fonctions exponentielles et intégrales,Intégrales
+svt,2010,1,ancien,1,Histoire de la Terre et de la vie,Géologie
+svt,2010,1,ancien,2,Génétique,Génétique et évolution
+svt,2010,1,ancien,3,Géologie,Géologie
+svt,2011,1,ancien,1,Géologie,Géologie
+svt,2011,1,ancien,2,Génétique et évolution,Génétique et évolution
+svt,2011,1,ancien,3,Génétique,Génétique et évolution
+svt,2012,1,ancien,1,Immunologie,Immunologie
+svt,2012,1,ancien,2,Évolution,Génétique et évolution
+svt,2012,1,ancien,3,Reproduction humaine,Corps humain et santé
+svt,2013,1,ancien,1,Géologie,Géologie
+svt,2013,1,ancien,2,Génétique,Génétique et évolution
+svt,2013,1,ancien,3,Communication nerveuse,Système nerveux et muscles
+svt,2014,1,ancien,1,Génétique,Génétique et évolution
+svt,2014,1,ancien,2,Géologie,Géologie
+svt,2014,1,ancien,3,Communication nerveuse,Système nerveux et muscles
+svt,2015,1,ancien,1,Géothermie,Géologie
+svt,2015,1,ancien,2,Évolution,Génétique et évolution
+svt,2015,1,ancien,3,Géologie,Géologie
+svt,2016,1,ancien,1,Biologie végétale,Biologie végétale
+svt,2016,1,ancien,2,Géologie,Géologie
+svt,2016,1,ancien,3,Immunologie et hormones,Immunologie
+svt,2017,1,ancien,1,Communication nerveuse,Système nerveux et muscles
+svt,2017,1,ancien,2,Génétique,Génétique et évolution
+svt,2017,1,ancien,3,Géologie,Géologie
+svt,2018,1,ancien,1,Géologie,Géologie
+svt,2018,1,ancien,2,Biologie végétale,Biologie végétale
+svt,2018,1,ancien,3,Génétique,Génétique et évolution
+svt,2019,1,ancien,1,Géologie,Géologie
+svt,2019,1,ancien,2,Génétique,Génétique et évolution
+svt,2019,1,ancien,3,Communication nerveuse,Système nerveux et muscles
+svt,2021,1,reforme,1,Génétique et évolution,Génétique et évolution
+svt,2021,2,reforme,1,Contraction musculaire (au choix),Système nerveux et muscles
+svt,2021,2,reforme,1,Biologie végétale (au choix),Biologie végétale
+svt,2021,2,reforme,2,Système nerveux (au choix),Système nerveux et muscles
+svt,2021,2,reforme,2,Génétique (au choix),Génétique et évolution
+svt,2022,1,reforme,1,Contraction musculaire (au choix),Système nerveux et muscles
+svt,2022,1,reforme,1,Climat (au choix),Climat
+svt,2022,1,reforme,2,Reproduction végétale,Biologie végétale
+svt,2022,2,reforme,1,Climat (au choix),Climat
+svt,2022,2,reforme,1,Génétique végétale (au choix),Génétique et évolution
+svt,2022,2,reforme,2,Régulation de la glycémie,Corps humain et santé
+svt,2023,1,reforme,1,Climat,Climat
+svt,2023,1,reforme,2,Génétique et maladies,Génétique et évolution
+svt,2023,2,reforme,1,Biologie végétale,Biologie végétale
+svt,2023,2,reforme,2,Climat,Climat
+svt,2024,1,reforme,1,Biologie végétale,Biologie végétale
+svt,2024,1,reforme,2,Système nerveux et stress,Système nerveux et muscles
+svt,2024,2,reforme,1,Système nerveux et motricité,Système nerveux et muscles
+svt,2024,2,reforme,2,Biologie végétale,Biologie végétale
+svt,2025,1,reforme,1,Biologie végétale,Biologie végétale
+svt,2025,1,reforme,2,Climat,Climat
+svt,2025,2,reforme,1,Biologie végétale,Biologie végétale
+svt,2025,2,reforme,2,Génétique,Génétique et évolution
+svt,2026,1,reforme,1,Système nerveux et stress,Système nerveux et muscles
+svt,2026,1,reforme,2,Climat et volcanisme,Climat
