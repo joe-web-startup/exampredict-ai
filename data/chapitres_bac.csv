@@ -1,0 +1,67 @@
+matiere,annee,jour,programme,exercice,chapitre_brut,famille
+physique-chimie,2010,1,ancien,1,Chimie organique,Chimie organique
+physique-chimie,2010,1,ancien,2,Nucléaire,Nucléaire
+physique-chimie,2010,1,ancien,3,Électricité,Électricité
+physique-chimie,2011,1,ancien,1,Mécanique,Mécanique
+physique-chimie,2011,1,ancien,2,Acide-base,Acide-base
+physique-chimie,2011,1,ancien,3,Nucléaire,Nucléaire
+physique-chimie,2012,1,ancien,1,Ondes,Ondes et optique
+physique-chimie,2012,1,ancien,2,Électricité,Électricité
+physique-chimie,2012,1,ancien,3,Cinétique chimique,Cinétique chimique
+physique-chimie,2013,1,ancien,1,Cinétique chimique,Cinétique chimique
+physique-chimie,2013,1,ancien,2,Mécanique spatiale,Mécanique
+physique-chimie,2013,1,ancien,3,Chimie organique,Chimie organique
+physique-chimie,2014,1,ancien,1,Physique des particules,Nucléaire
+physique-chimie,2014,1,ancien,2,Chimie organique,Chimie organique
+physique-chimie,2014,1,ancien,3,Mécanique spatiale,Mécanique
+physique-chimie,2015,1,ancien,1,Mécanique,Mécanique
+physique-chimie,2015,1,ancien,2,Chimie,Chimie générale
+physique-chimie,2015,1,ancien,3,Ondes lumineuses,Ondes et optique
+physique-chimie,2016,1,ancien,1,Effet Doppler,Ondes et optique
+physique-chimie,2016,1,ancien,2,Chimie organique,Chimie organique
+physique-chimie,2016,1,ancien,3,Mécanique spatiale,Mécanique
+physique-chimie,2017,1,ancien,1,Chimie organique,Chimie organique
+physique-chimie,2017,1,ancien,2,Ondes,Ondes et optique
+physique-chimie,2017,1,ancien,3,Acide-base,Acide-base
+physique-chimie,2018,1,ancien,1,Chimie,Chimie générale
+physique-chimie,2018,1,ancien,2,Mécanique,Mécanique
+physique-chimie,2018,1,ancien,3,Chimie organique,Chimie organique
+physique-chimie,2019,1,ancien,1,Chimie organique,Chimie organique
+physique-chimie,2019,1,ancien,2,Mécanique,Mécanique
+physique-chimie,2019,1,ancien,3,Ondes sonores,Ondes et optique
+physique-chimie,2021,1,reforme,1,Mécanique,Mécanique
+physique-chimie,2021,1,reforme,2,Acide-base,Acide-base
+physique-chimie,2021,1,reforme,3,Chimie organique,Chimie organique
+physique-chimie,2021,2,reforme,1,Chimie,Chimie générale
+physique-chimie,2021,2,reforme,2,Mécanique,Mécanique
+physique-chimie,2021,2,reforme,3,Électricité,Électricité
+physique-chimie,2022,1,reforme,1,Chimie,Chimie générale
+physique-chimie,2022,1,reforme,2,Mécanique,Mécanique
+physique-chimie,2022,1,reforme,3,Électricité,Électricité
+physique-chimie,2022,2,reforme,1,Optique,Ondes et optique
+physique-chimie,2022,2,reforme,2,Chimie organique,Chimie organique
+physique-chimie,2022,2,reforme,3,Oxydoréduction,Oxydoréduction
+physique-chimie,2023,1,reforme,1,Optique,Ondes et optique
+physique-chimie,2023,1,reforme,2,Chimie organique,Chimie organique
+physique-chimie,2023,1,reforme,3,Chimie organique,Chimie organique
+physique-chimie,2023,2,reforme,1,Acide-base,Acide-base
+physique-chimie,2023,2,reforme,2,Mécanique,Mécanique
+physique-chimie,2023,2,reforme,3,Électricité,Électricité
+physique-chimie,2024,1,reforme,1,Acide-base,Acide-base
+physique-chimie,2024,1,reforme,2,Optique,Ondes et optique
+physique-chimie,2024,1,reforme,3,Mécanique,Mécanique
+physique-chimie,2024,2,reforme,1,Chimie organique,Chimie organique
+physique-chimie,2024,2,reforme,2,Mécanique,Mécanique
+physique-chimie,2024,2,reforme,3,Ondes,Ondes et optique
+physique-chimie,2025,1,reforme,1,Acide-base,Acide-base
+physique-chimie,2025,1,reforme,2,Nucléaire,Nucléaire
+physique-chimie,2025,1,reforme,3,Mécanique,Mécanique
+physique-chimie,2025,2,reforme,1,Électricité,Électricité
+physique-chimie,2025,2,reforme,2,Conductimétrie,Chimie générale
+physique-chimie,2025,2,reforme,3,Chimie organique,Chimie organique
+physique-chimie,2026,1,reforme,1,Électricité,Électricité
+physique-chimie,2026,1,reforme,2,Cinétique chimique,Cinétique chimique
+physique-chimie,2026,1,reforme,3,Chimie organique,Chimie organique
+physique-chimie,2026,2,reforme,1,Cinétique chimique,Cinétique chimique
+physique-chimie,2026,2,reforme,2,Thermodynamique,Thermodynamique
+physique-chimie,2026,2,reforme,3,Mécanique spatiale,Mécanique
