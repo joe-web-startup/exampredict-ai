@@ -29,12 +29,6 @@ physique-chimie,2018,1,ancien,3,Chimie organique,Chimie organique
 physique-chimie,2019,1,ancien,1,Chimie organique,Chimie organique
 physique-chimie,2019,1,ancien,2,Mécanique,Mécanique
 physique-chimie,2019,1,ancien,3,Ondes sonores,Ondes et optique
-physique-chimie,2021,1,reforme,1,Mécanique,Mécanique
-physique-chimie,2021,1,reforme,2,Acide-base,Acide-base
-physique-chimie,2021,1,reforme,3,Chimie organique,Chimie organique
-physique-chimie,2021,2,reforme,1,Chimie,Chimie générale
-physique-chimie,2021,2,reforme,2,Mécanique,Mécanique
-physique-chimie,2021,2,reforme,3,Électricité,Électricité
 physique-chimie,2022,1,reforme,1,Chimie,Chimie générale
 physique-chimie,2022,1,reforme,2,Mécanique,Mécanique
 physique-chimie,2022,1,reforme,3,Électricité,Électricité
@@ -189,11 +183,6 @@ svt,2018,1,ancien,3,Génétique,Génétique et évolution
 svt,2019,1,ancien,1,Géologie,Géologie
 svt,2019,1,ancien,2,Génétique,Génétique et évolution
 svt,2019,1,ancien,3,Communication nerveuse,Système nerveux et muscles
-svt,2021,1,reforme,1,Génétique et évolution,Génétique et évolution
-svt,2021,2,reforme,1,Contraction musculaire (au choix),Système nerveux et muscles
-svt,2021,2,reforme,1,Biologie végétale (au choix),Biologie végétale
-svt,2021,2,reforme,2,Système nerveux (au choix),Système nerveux et muscles
-svt,2021,2,reforme,2,Génétique (au choix),Génétique et évolution
 svt,2022,1,reforme,1,Contraction musculaire (au choix),Système nerveux et muscles
 svt,2022,1,reforme,1,Climat (au choix),Climat
 svt,2022,1,reforme,2,Reproduction végétale,Biologie végétale
