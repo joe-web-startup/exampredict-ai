@@ -1,1 +1,11 @@
 __pycache__/
+
+# Secrets : ne jamais publier la clé API
+.env
+
+# Environnement virtuel
+.venv/
+.pytest_cache/
+
+# Résultats générés automatiquement
+data/analyses/

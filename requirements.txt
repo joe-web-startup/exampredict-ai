@@ -1,2 +1,5 @@
 pandas
 pypdf
+anthropic
+python-dotenv
+scikit-learn
