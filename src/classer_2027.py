@@ -1,13 +1,19 @@
 # WEEK 3 · DAY 3 · Classification : « ce chapitre va-t-il tomber ? » OUI ou NON
 # Lance depuis la racine du projet :  py src/classer_2027.py
-
+import sys
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 
 tout = pd.read_csv("data/chapitres_bac.csv")
-df = tout[tout["matiere"] == "physique-chimie"]
+matiere = sys.argv[1] if len(sys.argv) > 1 else "physique-chimie"
+seuil = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
 
+df = tout[tout["matiere"] == matiere]
+if df.empty:
+    print("Matière inconnue. Choix possibles :", sorted(tout["matiere"].unique()))
+    sys.exit(1)
+print("=====", matiere.upper(), "· seuil", seuil, "=====")
 # 1. Pour chaque année et chaque chapitre : 1 s'il est tombé, 0 sinon
 tombe = (pd.crosstab(df["annee"], df["famille"]) > 0).astype(int)
 annees = list(tombe.index)
