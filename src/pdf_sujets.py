@@ -51,6 +51,22 @@ def decouper_exercices(texte):
     return exercices
 
 
+def pages_des_exercices(chemin):
+    """Renvoie {numero: (page_debut, page_fin)} (pages numérotées à partir de 0).
+    Un exercice va de la page où apparaît son titre jusqu'à la page où commence le suivant."""
+    lecteur = PdfReader(chemin)
+    debuts = {}
+    for i, page in enumerate(lecteur.pages):
+        for titre in MOTIF_TITRE.finditer(page.extract_text() or ""):
+            debuts.setdefault(int(titre.group(1)), i)
+    numeros = sorted(debuts)
+    pages = {}
+    for k, numero in enumerate(numeros):
+        fin = debuts[numeros[k + 1]] if k + 1 < len(numeros) else len(lecteur.pages) - 1
+        pages[numero] = (debuts[numero], fin)
+    return pages
+
+
 def detecter_themes(texte, dictionnaire=CONCEPTS, minimum=3, maximum=3):
     """Renvoie les thèmes principaux d'un exercice.
     Score d'un thème = nombre total d'apparitions de ses mots-clés (en mots entiers).
