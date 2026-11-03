@@ -5,15 +5,21 @@
 #
 # Réglages SECRETS (jamais sur GitHub) : .streamlit/secrets.toml en local,
 # onglet « Secrets » de Streamlit Cloud en ligne :
-#   LIEN_PAIEMENT     = "https://buy.stripe.com/..."   # Payment Link Stripe à 5 €
-#   STRIPE_SECRET_KEY = "sk_live_..."                  # clé secrète Stripe (vérifie les paiements)
-#   CODE_ADMIN        = "..."                          # ton code personnel
+#   IBAN       = "FR76 ..."          # l'IBAN qui reçoit les virements
+#   TITULAIRE  = ""                  # nom affiché à côté de l'IBAN (facultatif)
+#   CONTACT    = "@ton_instagram"    # où l'élève envoie la capture de son virement
+#   CODE_ADMIN = "..."               # ton code personnel
+#   CLE_CODES  = "..."               # clé secrète qui fabrique les codes d'accès
 #
-# Parcours d'un élève : il paie sur Stripe → Stripe le renvoie sur le site avec
-# ?session_id=... → le site vérifie auprès de Stripe que le paiement est bien « paid »
-# → le dossier s'ouvre tout seul. Le code admin, lui, se saisit sur le site avec ?admin à la fin du lien.
+# Parcours d'un élève : le site lui donne une référence unique (PH-XXXXXX) → il fait un virement
+# de 5 € avec cette référence → il t'envoie la capture → tu ouvres le site avec ?admin, tu entres
+# la référence, le site calcule son code → tu le lui envoies → il entre référence + code → dossier ouvert.
+# Aucune base de données : le code est calculé à partir de la référence et de CLE_CODES.
 
-import stripe
+import hashlib
+import hmac
+import secrets as aleatoire
+
 import streamlit as st
 
 from moteur import charger
@@ -29,22 +35,24 @@ def reglage(nom, defaut):
         return defaut
 
 
-LIEN_PAIEMENT = reglage("LIEN_PAIEMENT", "")
-STRIPE_SECRET_KEY = reglage("STRIPE_SECRET_KEY", "")
+IBAN = reglage("IBAN", "")
+TITULAIRE = reglage("TITULAIRE", "")
+CONTACT = reglage("CONTACT", "")
 CODE_ADMIN = reglage("CODE_ADMIN", "")
+CLE_CODES = reglage("CLE_CODES", "")
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def paiement_valide(session_id):
-    """Demande à Stripe si cette session de paiement a bien été payée."""
-    if not STRIPE_SECRET_KEY or not session_id.startswith("cs_"):
+def code_pour(reference):
+    """Le code d'accès d'une référence : 8 caractères impossibles à deviner sans CLE_CODES."""
+    signature = hmac.new(CLE_CODES.encode(), reference.strip().upper().encode(), hashlib.sha256)
+    return signature.hexdigest()[:8].upper()
+
+
+def acces_valide(reference, code):
+    if not CLE_CODES or not reference.strip() or not code.strip():
         return False
-    try:
-        session = stripe.checkout.Session.retrieve(session_id, api_key=STRIPE_SECRET_KEY)
-    except stripe.StripeError:
-        return False
-    return session.payment_status == "paid"
+    return hmac.compare_digest(code_pour(reference), code.strip().upper())
 
 
 @st.cache_data
@@ -132,6 +140,11 @@ p, li { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
 /* Bloc d'accès */
 .acces { border: 1px solid var(--blanc); padding: 22px 22px 6px; margin: 0 0 14px; }
+.virement { display: grid; gap: 8px; margin: 14px 0 6px; }
+.virement div { display: grid; grid-template-columns: 170px 1fr; gap: 12px; border-top: 1px dashed var(--trait); padding-top: 8px; }
+.virement span { font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gris); }
+.virement b { font-weight: 500; letter-spacing: .06em; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .virement div { grid-template-columns: 1fr; gap: 2px; } }
 .prix { font-family: 'Archivo Black', sans-serif !important; font-size: clamp(2.4rem, 6vw, 4rem); line-height: 1; }
 
 /* Widgets Streamlit */
@@ -169,10 +182,8 @@ st.markdown(STYLE, unsafe_allow_html=True)
 if "debloque" not in st.session_state:
     st.session_state.debloque = False
 
-# Retour de Stripe après paiement : ?session_id=cs_... → on vérifie, puis on ouvre le dossier
-session_id = st.query_params.get("session_id", "")
-if session_id and paiement_valide(session_id):
-    st.session_state.debloque = True
+if "reference" not in st.session_state:
+    st.session_state.reference = "PH-" + aleatoire.token_hex(3).upper()
 
 BARRE = (
     '<div class="barre"><span><span class="point"></span><b>PHILIPPE</b> · l’IA qui a calculé le bac 2027</span>'
@@ -197,26 +208,43 @@ def grille_cachee():
 
 
 def bloc_acces():
+    titulaire = f"<div><span>Titulaire</span><b>{TITULAIRE}</b></div>" if TITULAIRE else ""
+    contact = f" à <b>{CONTACT}</b>" if CONTACT else ""
     st.markdown(
         '<div class="acces"><div class="etiquette">Accès au dossier</div>'
         '<div class="prix">5 €</div>'
-        '<p class="sous">Accès immédiat dès le paiement validé.</p></div>',
+        '<div class="virement">'
+        f'<div><span>Virement de</span><b>5,00 €</b></div>'
+        f'<div><span>IBAN</span><b>{IBAN or "—"}</b></div>{titulaire}'
+        f'<div><span>Libellé du virement</span><b>{st.session_state.reference}</b></div>'
+        '</div>'
+        f'<p class="sous">Mets bien la référence <b>{st.session_state.reference}</b> en libellé. '
+        f'Envoie la capture de ton virement{contact} : tu reçois ton code d’accès.</p></div>',
         unsafe_allow_html=True,
     )
-    if LIEN_PAIEMENT:
-        st.link_button("Débloquer le dossier · 5 €", LIEN_PAIEMENT, width="stretch")
-    else:
-        st.button("Débloquer le dossier · 5 €", disabled=True, width="stretch")
+    with st.form("acces", border=False):
+        col_ref, col_code = st.columns(2)
+        reference = col_ref.text_input("Ta référence", value=st.session_state.reference)
+        code = col_code.text_input("Ton code d’accès", placeholder="XXXXXXXX")
+        if st.form_submit_button("Ouvrir le dossier", width="stretch"):
+            if acces_valide(reference, code):
+                st.session_state.debloque = True
+                st.rerun()
+            else:
+                st.error("Référence ou code incorrect.")
 
     if "admin" in st.query_params and CODE_ADMIN:      # visible seulement avec ?admin dans le lien
         with st.form("admin", border=False):
-            code = st.text_input("Accès admin", type="password")
+            mot = st.text_input("Accès admin", type="password")
+            ref_eleve = st.text_input("Référence d’un élève qui a payé (facultatif)")
             if st.form_submit_button("Entrer"):
-                if code.strip() == CODE_ADMIN:
+                if mot.strip() != CODE_ADMIN:
+                    st.error("Code refusé.")
+                elif ref_eleve.strip():
+                    st.success(f"Code pour {ref_eleve.strip().upper()} : {code_pour(ref_eleve)}")
+                else:
                     st.session_state.debloque = True
                     st.rerun()
-                else:
-                    st.error("Code refusé.")
 
 
 def page_intro():
@@ -259,7 +287,7 @@ def page_intro():
         'un chapitre pour chacun, jour 1 et jour 2.</p></div>'
         '<div><em>Révise dans le bon ordre</em><p>Les autres révisent tout au même niveau. '
         'Toi, tu sais par où commencer.</p></div>'
-        '<div><em>Instantané</em><p>Paiement validé, dossier ouvert. Ta spé, ton jour, tes chapitres.</p></div>'
+        '<div><em>Simple</em><p>Un virement de 5 €, ton code d’accès, ton dossier ouvert. Ta spé, ton jour, tes chapitres.</p></div>'
         '<div><em>5 €</em><p>Le prix d’un sandwich. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
         '</div>',
         unsafe_allow_html=True,
