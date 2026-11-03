@@ -12,3 +12,5 @@ data/analyses/
 
 # Secrets Streamlit (lien de paiement, codes d acces)
 .streamlit/secrets.toml
+
+.claude/
