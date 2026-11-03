@@ -95,7 +95,9 @@ def evaluer(table, modele):
         prevus = set(classer(table, modele, annee).head(k).index)
         justes += len(prevus & reels)
         total += k
-        hasard += k * k / len(candidats(table, annee))   # k chapitres tirés au hasard parmi les candidats
+        # Tirer k chapitres au hasard parmi les n candidats : en moyenne min(k, n) × (part des candidats qui tombent)
+        cand = candidats(table, annee)
+        hasard += min(k, len(cand)) * len(reels & set(cand)) / len(cand)
     return justes / total, hasard / total
 
 
