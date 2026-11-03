@@ -3,3 +3,5 @@ pypdf
 anthropic
 python-dotenv
 scikit-learn
+fpdf2
+streamlit

@@ -122,19 +122,30 @@ def assembler(sujets, scores, choisis, dossier, sortie):
         ecrivain.write(f)
 
 
+def generer(dossier, sortie):
+    """Tout le pipeline : analyser → scorer → choisir → assembler le PDF.
+    Renvoie (scores, choisis). Lève ValueError s'il y a moins de 2 sujets lisibles."""
+    sujets = [s for s in analyser_dossier(dossier) if s["exercices"]]
+    if len(sujets) < 2:
+        raise ValueError("Il faut au moins 2 sujets PDF lisibles pour repérer des tendances.")
+    scores = scorer_themes(sujets)
+    choisis = choisir_exercices(sujets, scores)
+    assembler(sujets, scores, choisis, dossier, Path(sortie))
+    return scores, choisis
+
+
 def main():
     dossier = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/exams")
     if not dossier.is_dir():
         print(f"Dossier introuvable : {dossier}")
         sys.exit(1)
 
-    sujets = [s for s in analyser_dossier(dossier) if s["exercices"]]
-    if len(sujets) < 2:
-        print("Il faut au moins 2 sujets PDF lisibles pour repérer des tendances.")
+    sortie = Path("data/analyses/sujet_probable.pdf")
+    try:
+        scores, choisis = generer(dossier, sortie)
+    except ValueError as erreur:
+        print(erreur)
         sys.exit(1)
-
-    scores = scorer_themes(sujets)
-    choisis = choisir_exercices(sujets, scores)
 
     print("📊 Thèmes les plus probables :")
     for theme, score in list(scores.items())[:6]:
@@ -142,9 +153,6 @@ def main():
     print("\n📝 Exercices retenus :")
     for s, ex, note in choisis:
         print(f"   {s['annee']} ex {ex['numero']} ({ex['points']:g} pts) {ex['titre']} → {', '.join(ex['themes'])}")
-
-    sortie = Path("data/analyses/sujet_probable.pdf")
-    assembler(sujets, scores, choisis, dossier, sortie)
     print(f"\n✅ PDF créé : {sortie}")
 
 
