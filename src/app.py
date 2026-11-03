@@ -5,11 +5,15 @@
 #
 # Réglages SECRETS (jamais sur GitHub) : .streamlit/secrets.toml en local,
 # onglet « Secrets » de Streamlit Cloud en ligne :
-#   LIEN_PAIEMENT = "https://revolut.me/..."   # ton lien de paiement
-#   CODE_ADMIN    = "..."                      # ton code personnel
-#   CODES_ACCES   = ["...", "..."]             # codes donnés aux élèves après paiement
-# Sans réglage, le site est en MODE TEST et accepte le code TEST2027.
+#   LIEN_PAIEMENT     = "https://buy.stripe.com/..."   # Payment Link Stripe à 5 €
+#   STRIPE_SECRET_KEY = "sk_live_..."                  # clé secrète Stripe (vérifie les paiements)
+#   CODE_ADMIN        = "..."                          # ton code personnel
+#
+# Parcours d'un élève : il paie sur Stripe → Stripe le renvoie sur le site avec
+# ?session_id=... → le site vérifie auprès de Stripe que le paiement est bien « paid »
+# → le dossier s'ouvre tout seul. Le code admin, lui, se saisit sur le site avec ?admin à la fin du lien.
 
+import stripe
 import streamlit as st
 
 from moteur import charger
@@ -26,12 +30,21 @@ def reglage(nom, defaut):
 
 
 LIEN_PAIEMENT = reglage("LIEN_PAIEMENT", "")
+STRIPE_SECRET_KEY = reglage("STRIPE_SECRET_KEY", "")
 CODE_ADMIN = reglage("CODE_ADMIN", "")
-CODES_ACCES = {c.strip().upper() for c in reglage("CODES_ACCES", [])}
-MODE_TEST = not (CODE_ADMIN or CODES_ACCES)
-if MODE_TEST:
-    CODES_ACCES = {"TEST2027"}
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def paiement_valide(session_id):
+    """Demande à Stripe si cette session de paiement a bien été payée."""
+    if not STRIPE_SECRET_KEY or not session_id.startswith("cs_"):
+        return False
+    try:
+        session = stripe.checkout.Session.retrieve(session_id, api_key=STRIPE_SECRET_KEY)
+    except stripe.StripeError:
+        return False
+    return session.payment_status == "paid"
 
 
 @st.cache_data
@@ -148,7 +161,6 @@ p, li { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 .resultat .l { font-size: .68rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gris); }
 .resultat .c { font-family: 'Archivo Black', sans-serif !important; font-size: clamp(1.15rem, 2.6vw, 1.7rem); text-transform: uppercase; line-height: 1.15; }
 
-.note { color: var(--gris); font-size: .7rem; letter-spacing: .04em; line-height: 1.6; margin-top: 18px; max-width: 90ch; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 """
@@ -156,6 +168,11 @@ st.markdown(STYLE, unsafe_allow_html=True)
 
 if "debloque" not in st.session_state:
     st.session_state.debloque = False
+
+# Retour de Stripe après paiement : ?session_id=cs_... → on vérifie, puis on ouvre le dossier
+session_id = st.query_params.get("session_id", "")
+if session_id and paiement_valide(session_id):
+    st.session_state.debloque = True
 
 BARRE = (
     '<div class="barre"><span><span class="point"></span><b>ExamPredict</b> · dossier bac 2027</span>'
@@ -183,23 +200,19 @@ def bloc_acces():
     st.markdown(
         '<div class="acces"><div class="etiquette">Accès au dossier</div>'
         '<div class="prix">5 €</div>'
-        '<p class="sous">Paiement unique. Tu reçois ton code d’accès, tu entres, tu choisis ta spé et ton jour.</p></div>',
+        '<p class="sous">Accès immédiat dès le paiement validé.</p></div>',
         unsafe_allow_html=True,
     )
-    col_payer, col_code = st.columns([1, 1.2], vertical_alignment="bottom")
-    with col_payer:
-        if LIEN_PAIEMENT:
-            st.link_button("Payer 5 € · Revolut", LIEN_PAIEMENT, width="stretch")
-        elif MODE_TEST:
-            st.caption("Mode test : paiement non branché. Code : TEST2027")
-        else:
-            st.caption("Paiement bientôt disponible.")
-    with col_code:
-        with st.form("acces", border=False):
-            code = st.text_input("Code d'accès", placeholder="XXXX-XXXX")
-            if st.form_submit_button("Ouvrir le dossier", width="stretch"):
-                saisi = code.strip().upper()
-                if saisi and (saisi in CODES_ACCES or (CODE_ADMIN and saisi == CODE_ADMIN.upper())):
+    if LIEN_PAIEMENT:
+        st.link_button("Débloquer le dossier · 5 €", LIEN_PAIEMENT, width="stretch")
+    else:
+        st.button("Débloquer le dossier · 5 €", disabled=True, width="stretch")
+
+    if "admin" in st.query_params and CODE_ADMIN:      # visible seulement avec ?admin dans le lien
+        with st.form("admin", border=False):
+            code = st.text_input("Accès admin", type="password")
+            if st.form_submit_button("Entrer"):
+                if code.strip() == CODE_ADMIN:
                     st.session_state.debloque = True
                     st.rerun()
                 else:
@@ -233,21 +246,24 @@ def page_intro():
 
     st.markdown(
         '<div class="raisons defile">'
-        '<div><em>Le bac a des habitudes</em><p>Certains chapitres reviennent, toujours à la même place. '
-        'Le modèle les a repérées sur 15 ans.</p></div>'
+        '<div><em>Un vrai modèle de machine learning</em><p>Régression logistique, votes pondérés dans le temps, '
+        'fréquences : trois modèles mathématiques entraînés sur 15 ans de sujets, mis en compétition. '
+        'Le plus précis a calculé chaque exercice de 2027.</p></div>'
         '<div><em>Testé sur le bac 2026</em><p>Sans voir les sujets 2026, il a retrouvé 10 des 13 chapitres tombés. '
         'Le même modèle a calculé 2027.</p></div>'
+        '<div><em>On l’a testé avant de vous le donner</em><p>On ne voulait pas vous vendre une intuition. '
+        'On a d’abord mis le modèle à l’épreuve du bac 2026, à l’aveugle. Il a tenu. Cette année, on l’ouvre à tous.</p></div>'
+        '<div><em>Coefficient 16</em><p>Chaque spé compte coefficient 16 au bac. C’est là que se joue ta mention. '
+        'Ta dernière ligne droite doit viser juste.</p></div>'
         '<div><em>Exercice par exercice</em><p>Pas une liste vague. Exercice 1, exercice 2, exercice 3 : '
         'un chapitre pour chacun, jour 1 et jour 2.</p></div>'
         '<div><em>Révise dans le bon ordre</em><p>Les autres révisent tout au même niveau. '
         'Toi, tu sais par où commencer.</p></div>'
-        '<div><em>Instantané</em><p>Code entré, dossier ouvert. Ta spé, ton jour, tes chapitres.</p></div>'
-        '<div><em>5 €</em><p>Le prix d’un sandwich. Pour la dernière ligne droite de ton année.</p></div>'
+        '<div><em>Instantané</em><p>Paiement validé, dossier ouvert. Ta spé, ton jour, tes chapitres.</p></div>'
+        '<div><em>5 €</em><p>Le prix d’un sandwich. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
         '</div>',
         unsafe_allow_html=True,
     )
-    st.markdown('<p class="note">Pronostics calculés à partir des anciens sujets : un ordre de priorité, pas le sujet. '
-                'Révise aussi le reste du programme.</p>', unsafe_allow_html=True)
 
 
 def page_dossier():
@@ -271,8 +287,6 @@ def page_dossier():
         for n, chapitre, origine in tous_les_pronostics()[(MATIERES[nom], jour)]
     )
     st.markdown(f'<div style="margin-top:18px">{lignes}</div>', unsafe_allow_html=True)
-    st.markdown('<p class="note">Pronostics calculés à partir des anciens sujets : un ordre de priorité, pas le sujet. '
-                'Révise aussi le reste du programme.</p>', unsafe_allow_html=True)
 
 
 if st.session_state.debloque:
