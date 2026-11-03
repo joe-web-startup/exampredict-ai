@@ -9,3 +9,6 @@ __pycache__/
 
 # Résultats générés automatiquement
 data/analyses/
+
+# Secrets Streamlit (lien de paiement, codes d acces)
+.streamlit/secrets.toml
