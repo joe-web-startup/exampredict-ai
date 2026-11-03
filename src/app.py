@@ -1,4 +1,4 @@
-# Le site public d'ExamPredict AI : « dossier classé » noir et blanc.
+# Le site public de PHILIPPE, l'IA d'ExamPredict : « dossier classé » noir et blanc.
 #
 # Lancer en local, depuis la racine du projet :
 #   py -m streamlit run src/app.py
@@ -19,7 +19,7 @@ import streamlit as st
 from moteur import charger
 from pronostics import pronostic
 
-st.set_page_config(page_title="ExamPredict · Dossier Bac 2027", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Philippe · Dossier Bac 2027", layout="wide", initial_sidebar_state="collapsed")
 
 
 def reglage(nom, defaut):
@@ -175,7 +175,7 @@ if session_id and paiement_valide(session_id):
     st.session_state.debloque = True
 
 BARRE = (
-    '<div class="barre"><span><span class="point"></span><b>ExamPredict</b> · dossier bac 2027</span>'
+    '<div class="barre"><span><span class="point"></span><b>PHILIPPE</b> · l’IA qui a calculé le bac 2027</span>'
     '<span>Accès restreint · Île-de-France</span><span>Physique-chimie · SVT · Maths</span></div>'
 )
 
@@ -224,7 +224,7 @@ def page_intro():
     st.markdown(
         '<div class="tampon entree">Classifié</div>'
         '<h1 class="titre entree d2">Le bac 2027<br>est <span class="barre-noire">déjà écrit</span><br>quelque part.</h1>'
-        '<p class="sous entree d3">On a fait tourner une IA sur <b>15 ans de sujets du bac</b>, exercice par exercice. '
+        '<p class="sous entree d3"><b>Philippe</b> est une IA. Elle a avalé <b>15 ans de sujets du bac</b>, exercice par exercice. '
         'Elle a sorti <b>un chapitre pour chaque exercice</b> de ton épreuve. Le résultat est ci-dessous. '
         'Caviardé.</p>',
         unsafe_allow_html=True,
@@ -248,11 +248,11 @@ def page_intro():
         '<div class="raisons defile">'
         '<div><em>Un vrai modèle de machine learning</em><p>Régression logistique, votes pondérés dans le temps, '
         'fréquences : trois modèles mathématiques entraînés sur 15 ans de sujets, mis en compétition. '
-        'Le plus précis a calculé chaque exercice de 2027.</p></div>'
-        '<div><em>Testé sur le bac 2026</em><p>Sans voir les sujets 2026, il a retrouvé 10 des 13 chapitres tombés. '
-        'Le même modèle a calculé 2027.</p></div>'
+        'Le plus précis est devenu Philippe.</p></div>'
+        '<div><em>Testé sur le bac 2026</em><p>Sans voir les sujets 2026, Philippe a retrouvé 10 des 13 chapitres tombés. '
+        'C’est lui qui a calculé 2027.</p></div>'
         '<div><em>On l’a testé avant de vous le donner</em><p>On ne voulait pas vous vendre une intuition. '
-        'On a d’abord mis le modèle à l’épreuve du bac 2026, à l’aveugle. Il a tenu. Cette année, on l’ouvre à tous.</p></div>'
+        'On a d’abord mis Philippe à l’épreuve du bac 2026, à l’aveugle. Il a tenu. Cette année, on l’ouvre à tous.</p></div>'
         '<div><em>Coefficient 16</em><p>Chaque spé compte coefficient 16 au bac. C’est là que se joue ta mention. '
         'Ta dernière ligne droite doit viser juste.</p></div>'
         '<div><em>Exercice par exercice</em><p>Pas une liste vague. Exercice 1, exercice 2, exercice 3 : '
@@ -270,7 +270,7 @@ def page_dossier():
     st.markdown(BARRE, unsafe_allow_html=True)
     st.markdown(
         '<div class="tampon entree">Déclassifié</div>'
-        '<h1 class="titre entree d2" style="font-size:clamp(2.2rem,6vw,4.6rem)">Ton dossier.</h1>',
+        '<h1 class="titre entree d2" style="font-size:clamp(2.2rem,6vw,4.6rem)">Philippe a parlé.</h1>',
         unsafe_allow_html=True,
     )
     col1, col2 = st.columns(2)
