@@ -31,6 +31,8 @@ with onglet_chapitres:
     col1, col2 = st.columns(2)
     col1.metric("Fiabilité mesurée", f"{r['fiabilite']} %", f"{r['fiabilite'] - r['hasard']:+} pts vs hasard")
     col2.metric("Au hasard", f"{r['hasard']} %")
+    if r["absents"]:
+        st.caption("Pas tombés depuis la réforme de 2022, donc écartés : " + ", ".join(r["absents"]))
     with st.expander("Comment est calculée la fiabilité ?"):
         st.write(
             f"On a caché les années 2022 à 2026 une par une, prédit leurs chapitres avec les années "

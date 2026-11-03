@@ -67,6 +67,22 @@ MODELES = {
 
 # ---------- L'évaluation honnête ----------
 
+REFORME = 2022   # premier bac du nouveau programme
+
+
+def candidats(table, annee):
+    """Les chapitres « encore au programme » : ceux tombés au moins une fois depuis la réforme,
+    AVANT l'année visée (on n'utilise jamais le futur). Avant toute année de réforme : tous."""
+    recents = table[(table.index >= REFORME) & (table.index < annee)]
+    vus = list(recents.columns[recents.sum() > 0])
+    return vus or list(table.columns)
+
+
+def classer(table, modele, annee):
+    """Scores du modèle, limités aux chapitres candidats, du plus probable au moins probable."""
+    return modele(table, annee)[candidats(table, annee)].sort_values(ascending=False)
+
+
 def evaluer(table, modele):
     """Pour chaque année test : on prédit AUTANT de chapitres qu'il en est vraiment tombé (k),
     et on compte combien sont justes. Renvoie (taux du modèle, taux du hasard)."""
@@ -76,10 +92,10 @@ def evaluer(table, modele):
             continue
         reels = set(table.columns[table.loc[annee] == 1])
         k = len(reels)
-        prevus = set(modele(table, annee).sort_values(ascending=False).head(k).index)
+        prevus = set(classer(table, modele, annee).head(k).index)
         justes += len(prevus & reels)
         total += k
-        hasard += k * k / len(table.columns)     # ce qu'on trouverait en tirant k chapitres au hasard
+        hasard += k * k / len(candidats(table, annee))   # k chapitres tirés au hasard parmi les candidats
     return justes / total, hasard / total
 
 
@@ -93,8 +109,9 @@ def predire(df, matiere):
     taux, hasard = scores_modeles[meilleur]
 
     annee_cible = table.index.max() + 1
-    brut = MODELES[meilleur](table, annee_cible).sort_values(ascending=False)
+    brut = classer(table, MODELES[meilleur], annee_cible)
     pourcentages = (brut / brut.sum() * 100).round(1)
+    absents = sorted(set(table.columns) - set(brut.index))
     return {
         "matiere": matiere,
         "annee": int(annee_cible),
@@ -103,6 +120,7 @@ def predire(df, matiere):
         "hasard": round(hasard * 100),
         "comparaison": {nom: round(t * 100) for nom, (t, h) in scores_modeles.items()},
         "chapitres": pourcentages,
+        "absents": absents,
     }
 
 
