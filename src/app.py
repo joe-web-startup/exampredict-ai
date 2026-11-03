@@ -119,6 +119,9 @@ h1.titre, h2.grand { padding: 0 !important; color: var(--texte); }
 .carte .num { font-family: 'Unbounded', sans-serif !important; font-weight: 900; font-size: 3.2rem; color: var(--corail); line-height: 1; }
 .carte .lib { font-size: .72rem; letter-spacing: .25em; text-transform: uppercase; color: var(--doux); }
 .carte .chap { font-family: 'Unbounded', sans-serif !important; font-weight: 700; font-size: clamp(1.3rem, 3vw, 2rem); line-height: 1.15; }
+.chiffre { font-family: 'Unbounded', sans-serif !important; font-weight: 900; line-height: .9;
+           font-size: clamp(6rem, 22vw, 16rem); letter-spacing: -0.05em; color: var(--texte); margin: 10px 0 18px; }
+.chiffre span { color: var(--corail); }
 .note { color: var(--doux); font-size: .8rem; margin-top: 30px; max-width: 70ch; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -135,8 +138,8 @@ if "debloque" not in st.session_state:
 def bouton_decouvrir(cle):
     """Le bouton d'achat : vers le paiement, ou déblocage direct en mode test."""
     if LIEN_PAIEMENT:
-        st.link_button("Découvrir · 5 €", LIEN_PAIEMENT)
-    elif st.button("Découvrir · 5 €", key=cle):
+        st.link_button("Débloquer mes chapitres · 5 €", LIEN_PAIEMENT)
+    elif st.button("Débloquer mes chapitres · 5 €", key=cle):
         st.session_state.debloque = True
         st.rerun()
 
@@ -144,10 +147,10 @@ def bouton_decouvrir(cle):
 def page_intro():
     st.markdown(
         '<div class="ecran">'
-        '<div class="sur-titre entree">ExamPredict · Bac 2027</div>'
-        '<h1 class="titre entree d2">Les chapitres<br>qui vont <em>tomber</em>.</h1>'
-        '<p class="phrase entree d3">Physique-chimie, SVT, maths. Jour 1 et jour 2. '
-        'Exercice par exercice.</p>'
+        '<div class="sur-titre entree">ExamPredict · Bac 2027 · Île-de-France</div>'
+        '<h1 class="titre entree d2">Le bac a des<br><em>habitudes</em>.<br>On les a calculées.</h1>'
+        '<p class="phrase entree d3">Une IA entraînée sur 15 ans de sujets, exercice par exercice. '
+        'Elle te dit quels chapitres vont tomber au bac 2027.</p>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -159,31 +162,43 @@ def page_intro():
 
     st.markdown(
         '<div class="section defile">'
-        '<h2 class="grand">Un modèle entraîné sur les sujets des années passées.</h2>'
-        '<p class="phrase">Il a appris quels chapitres reviennent, et à quelle place. '
-        'Il te donne son pronostic pour 2027.</p>'
+        '<h2 class="grand">Pendant que tout le monde révisait tout,<br>on a <em>tout calculé</em>.</h2>'
+        '<p class="phrase">Chaque sujet du bac depuis 2010, découpé exercice par exercice. '
+        'Trois modèles d’IA mis en compétition. Seul le meilleur prédit ton bac.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="section defile">'
+        '<div class="sur-titre">Testé à l’aveugle sur le bac 2026</div>'
+        '<div class="chiffre">10<span>/13</span></div>'
+        '<p class="phrase">Sans jamais voir les sujets 2026, le modèle a retrouvé '
+        '<strong>10 des 13 chapitres</strong> tombés en physique-chimie, SVT et maths.</p>'
         '</div>',
         unsafe_allow_html=True,
     )
 
     st.markdown(
         '<div class="section defile"><div class="trio">'
-        '<div class="verre"><div class="nom">Physique-chimie</div><div class="info">3 exercices · jour 1 et jour 2</div></div>'
-        '<div class="verre"><div class="nom">SVT</div><div class="info">2 exercices · jour 1 et jour 2</div></div>'
-        '<div class="verre"><div class="nom">Maths</div><div class="info">4 exercices · jour 1 et jour 2</div></div>'
+        '<div class="verre"><div class="nom">Physique-chimie</div><div class="info">Tes 3 exercices · jour 1 et jour 2</div></div>'
+        '<div class="verre"><div class="nom">SVT</div><div class="info">Tes 2 exercices · jour 1 et jour 2</div></div>'
+        '<div class="verre"><div class="nom">Maths</div><div class="info">Tes 4 exercices · jour 1 et jour 2</div></div>'
         '</div></div>',
         unsafe_allow_html=True,
     )
 
     st.markdown(
         '<div class="section defile">'
-        '<h2 class="grand">Prends de l\'avance<br>sur la dernière ligne droite.</h2>'
+        '<h2 class="grand">Les autres vont réviser au hasard.<br><em>Toi, dans le bon ordre.</em></h2>'
+        '<p class="phrase">5 €. Le prix d’un sandwich. Pour savoir où frapper en premier '
+        'dans la dernière ligne droite.</p>'
         '</div>',
         unsafe_allow_html=True,
     )
     bouton_decouvrir("bas")
-    st.markdown('<p class="note">Pronostics calculés par un modèle à partir des anciens sujets. '
-                'Ils orientent tes révisions et ne garantissent pas le contenu de l\'épreuve.</p>',
+    st.markdown('<p class="note">Pronostics calculés à partir des anciens sujets : ils te donnent un ordre '
+                'de priorité, pas le sujet. Révise aussi le reste du programme.</p>',
                 unsafe_allow_html=True)
 
 
