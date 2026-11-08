@@ -1,25 +1,25 @@
-# Le site public de PHILIPPE, l'IA d'ExamPredict : « dossier classé » noir et blanc.
+# Le site public de PHILIPPE, l'IA d'ExamPredict : « dossier classé » noir et blanc. GRATUIT.
 #
 # Lancer en local, depuis la racine du projet :
 #   py -m streamlit run src/app.py
 #
+# Les inscriptions sont envoyées vers un Google Form (donc rangées dans un Google Sheet).
 # Réglages SECRETS (jamais sur GitHub) : .streamlit/secrets.toml en local,
 # onglet « Secrets » de Streamlit Cloud en ligne :
-#   IBAN       = "FR76 ..."          # l'IBAN qui reçoit les virements
-#   TITULAIRE  = ""                  # nom affiché à côté de l'IBAN (facultatif)
-#   CONTACT    = "@ton_instagram"    # où l'élève envoie la capture de son virement
-#   CODE_ADMIN = "..."               # ton code personnel
-#   CLE_CODES  = "..."               # clé secrète qui fabrique les codes d'accès
-#
-# Parcours d'un élève : le site lui donne une référence unique (PH-XXXXXX) → il fait un virement
-# de 5 € avec cette référence → il t'envoie la capture → tu ouvres le site avec ?admin, tu entres
-# la référence, le site calcule son code → tu le lui envoies → il entre référence + code → dossier ouvert.
-# Aucune base de données : le code est calculé à partir de la référence et de CLE_CODES.
+#   FORMULAIRE = "https://docs.google.com/forms/d/e/XXXX/formResponse"
+#   CONTACT    = "philippe.bac2027@gmail.com"     # adresse affichée pour les questions et la suppression des données
+#   CODE_ADMIN = "..."                            # ton accès au dossier (avec ?admin à la fin du lien)
+#   [CHAMPS]                                      # les identifiants « entry.XXXX » de chaque question du Google Form
+#   prenom = "entry.111"
+#   nom = "entry.222"
+#   email = "entry.333"
+#   telephone = "entry.444"
+#   specialites = "entry.555"
+#   jour = "entry.666"
 
-import hashlib
-import hmac
-import secrets as aleatoire
+import re
 
+import requests
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -36,25 +36,23 @@ def reglage(nom, defaut):
         return defaut
 
 
-IBAN = reglage("IBAN", "")
-TITULAIRE = reglage("TITULAIRE", "")
+FORMULAIRE = reglage("FORMULAIRE", "")
+CHAMPS = dict(reglage("CHAMPS", {}))
 CONTACT = reglage("CONTACT", "")
 CODE_ADMIN = reglage("CODE_ADMIN", "")
-CLE_CODES = reglage("CLE_CODES", "")
-DUREE = int(reglage("DUREE_REVELATION", 10))   # secondes d'affichage des chapitres
+DUREE = int(reglage("DUREE_REVELATION", 10))   # secondes d'affichage des chapitres (vue admin)
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
+EMAIL_VALIDE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-def code_pour(reference):
-    """Le code d'accès d'une référence : 8 caractères impossibles à deviner sans CLE_CODES."""
-    signature = hmac.new(CLE_CODES.encode(), reference.strip().upper().encode(), hashlib.sha256)
-    return signature.hexdigest()[:8].upper()
-
-
-def acces_valide(reference, code):
-    if not CLE_CODES or not reference.strip() or not code.strip():
+def envoyer_inscription(infos):
+    """Envoie l'inscription au Google Form. Renvoie True si Google l'a bien reçue."""
+    donnees = {CHAMPS[cle]: valeur for cle, valeur in infos.items() if cle in CHAMPS}
+    try:
+        reponse = requests.post(FORMULAIRE, data=donnees, timeout=10)
+    except requests.RequestException:
         return False
-    return hmac.compare_digest(code_pour(reference), code.strip().upper())
+    return reponse.status_code == 200
 
 
 @st.cache_data
@@ -184,8 +182,8 @@ st.markdown(STYLE, unsafe_allow_html=True)
 if "debloque" not in st.session_state:
     st.session_state.debloque = False
 
-if "reference" not in st.session_state:
-    st.session_state.reference = "PH-" + aleatoire.token_hex(3).upper()
+if "inscrit" not in st.session_state:
+    st.session_state.inscrit = False
 
 BARRE = (
     '<div class="barre"><span><span class="point"></span><b>PHILIPPE</b> · l’IA qui a calculé le bac 2027</span>'
@@ -209,46 +207,64 @@ def grille_cachee():
     return f'<div class="dossier defile">{colonnes}</div>'
 
 
-def bloc_acces():
-    titulaire = f"<div><span>Titulaire</span><b>{TITULAIRE}</b></div>" if TITULAIRE else ""
-    contact = f" à <b>{CONTACT}</b>" if CONTACT else ""
+def bloc_inscription():
+    if st.session_state.inscrit:
+        st.markdown(
+            '<div class="acces"><div class="etiquette">Inscription reçue</div>'
+            '<div class="prix">C’est noté.</div>'
+            '<p class="sous">Philippe t’envoie tes chapitres, exercice par exercice. Surveille ta boîte mail '
+            '(et tes spams).</p></div>',
+            unsafe_allow_html=True,
+        )
+        return
+
     st.markdown(
         '<div class="acces"><div class="etiquette">Accès au dossier</div>'
-        '<div class="prix">5 €</div>'
-        f'<p class="sous"><b>{DUREE} secondes. Une seule fois.</b> Tu choisis ta spé et ton jour : '
-        f'Philippe te montre tes chapitres pendant {DUREE} secondes, puis le dossier se referme.</p>'
-        '<div class="virement">'
-        f'<div><span>Virement de</span><b>5,00 €</b></div>'
-        f'<div><span>IBAN</span><b>{IBAN or "—"}</b></div>{titulaire}'
-        f'<div><span>Libellé du virement</span><b>{st.session_state.reference}</b></div>'
-        '</div>'
-        f'<p class="sous">Mets bien la référence <b>{st.session_state.reference}</b> en libellé. '
-        f'Envoie la capture de ton virement{contact} : tu reçois ton code d’accès.</p></div>',
+        '<div class="prix">Gratuit.</div>'
+        '<p class="sous">Laisse tes coordonnées : Philippe t’envoie <b>tes chapitres, exercice par exercice</b>, '
+        'pour ta spé et ton jour.</p></div>',
         unsafe_allow_html=True,
     )
-    with st.form("acces", border=False):
-        col_ref, col_code = st.columns(2)
-        reference = col_ref.text_input("Ta référence", value=st.session_state.reference)
-        code = col_code.text_input("Ton code d’accès", placeholder="XXXXXXXX")
-        if st.form_submit_button("Ouvrir le dossier", width="stretch"):
-            if acces_valide(reference, code):
-                st.session_state.debloque = True
+    with st.form("inscription", border=False):
+        col1, col2 = st.columns(2)
+        prenom = col1.text_input("Prénom *")
+        nom = col2.text_input("Nom")
+        col3, col4 = st.columns(2)
+        email = col3.text_input("E-mail *")
+        telephone = col4.text_input("Téléphone (pour recevoir par SMS, facultatif)")
+        specialites = st.pills("Tes spés *", list(MATIERES), selection_mode="multi")
+        jour = st.radio("Ton jour d’épreuve", ["Jour 1", "Jour 2", "Je ne sais pas encore"], horizontal=True)
+        accord = st.checkbox(
+            "J’accepte que ces informations servent uniquement à m’envoyer les pronostics de Philippe. "
+            "Elles ne sont ni vendues ni partagées, et je peux demander leur suppression à tout moment."
+        )
+        if st.form_submit_button("Recevoir mes chapitres", width="stretch"):
+            if not prenom.strip() or not EMAIL_VALIDE.match(email.strip()) or not specialites:
+                st.error("Il manque ton prénom, un e-mail valide ou tes spés.")
+            elif not accord:
+                st.error("Coche la case d’accord pour recevoir tes chapitres.")
+            elif not FORMULAIRE:
+                st.error("Les inscriptions ouvrent très bientôt. Reviens dans quelques jours.")
+            elif envoyer_inscription({
+                "prenom": prenom.strip(), "nom": nom.strip(), "email": email.strip(),
+                "telephone": telephone.strip(), "specialites": ", ".join(specialites), "jour": jour,
+            }):
+                st.session_state.inscrit = True
                 st.rerun()
             else:
-                st.error("Référence ou code incorrect.")
+                st.error("L’envoi a échoué. Réessaie dans un instant.")
+    if CONTACT:
+        st.caption(f"Une question, ou supprimer tes données : {CONTACT}")
 
     if "admin" in st.query_params and CODE_ADMIN:      # visible seulement avec ?admin dans le lien
         with st.form("admin", border=False):
             mot = st.text_input("Accès admin", type="password")
-            ref_eleve = st.text_input("Référence d’un élève qui a payé (facultatif)")
             if st.form_submit_button("Entrer"):
-                if mot.strip() != CODE_ADMIN:
-                    st.error("Code refusé.")
-                elif ref_eleve.strip():
-                    st.success(f"Code pour {ref_eleve.strip().upper()} : {code_pour(ref_eleve)}")
-                else:
+                if mot.strip() == CODE_ADMIN:
                     st.session_state.debloque = True
                     st.rerun()
+                else:
+                    st.error("Code refusé.")
 
 
 def page_intro():
@@ -263,7 +279,7 @@ def page_intro():
     )
     st.markdown(grille_cachee(), unsafe_allow_html=True)
 
-    bloc_acces()
+    bloc_inscription()
 
     st.markdown(
         '<div class="chiffres defile">'
@@ -291,8 +307,8 @@ def page_intro():
         'un chapitre pour chacun, jour 1 et jour 2.</p></div>'
         '<div><em>Révise dans le bon ordre</em><p>Les autres révisent tout au même niveau. '
         'Toi, tu sais par où commencer.</p></div>'
-        '<div><em>10 secondes</em><p>Un virement de 5 €, ton code d’accès, et le dossier s’ouvre. 10 secondes pour graver tes chapitres dans ta tête. Puis il se referme.</p></div>'
-        '<div><em>5 €</em><p>Le prix d’un sandwich. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
+        '<div><em>Envoyé chez toi</em><p>Ton e-mail, ton numéro si tu veux : Philippe t’envoie tes chapitres, exercice par exercice, pour ta spé et ton jour.</p></div>'
+        '<div><em>Gratuit</em><p>Aucun paiement. Juste ton inscription. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -397,7 +413,7 @@ def page_dossier():
     if st.button(f"Révéler · {DUREE} secondes", width="stretch"):
         st.session_state.ferme = True          # au prochain rechargement, le dossier est refermé
         chapitres = tous_les_pronostics()[(MATIERES[nom], jour)]
-        components.html(revelation(chapitres, st.session_state.reference, DUREE),
+        components.html(revelation(chapitres, "ADMIN", DUREE),
                         height=96 + 92 * len(chapitres))
 
 
