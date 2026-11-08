@@ -21,6 +21,7 @@ import hmac
 import secrets as aleatoire
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from moteur import charger
 from pronostics import pronostic
@@ -40,6 +41,7 @@ TITULAIRE = reglage("TITULAIRE", "")
 CONTACT = reglage("CONTACT", "")
 CODE_ADMIN = reglage("CODE_ADMIN", "")
 CLE_CODES = reglage("CLE_CODES", "")
+DUREE = int(reglage("DUREE_REVELATION", 10))   # secondes d'affichage des chapitres
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
 
 
@@ -213,6 +215,8 @@ def bloc_acces():
     st.markdown(
         '<div class="acces"><div class="etiquette">Accès au dossier</div>'
         '<div class="prix">5 €</div>'
+        f'<p class="sous"><b>{DUREE} secondes. Une seule fois.</b> Tu choisis ta spé et ton jour : '
+        f'Philippe te montre tes chapitres pendant {DUREE} secondes, puis le dossier se referme.</p>'
         '<div class="virement">'
         f'<div><span>Virement de</span><b>5,00 €</b></div>'
         f'<div><span>IBAN</span><b>{IBAN or "—"}</b></div>{titulaire}'
@@ -287,18 +291,99 @@ def page_intro():
         'un chapitre pour chacun, jour 1 et jour 2.</p></div>'
         '<div><em>Révise dans le bon ordre</em><p>Les autres révisent tout au même niveau. '
         'Toi, tu sais par où commencer.</p></div>'
-        '<div><em>Simple</em><p>Un virement de 5 €, ton code d’accès, ton dossier ouvert. Ta spé, ton jour, tes chapitres.</p></div>'
+        '<div><em>10 secondes</em><p>Un virement de 5 €, ton code d’accès, et le dossier s’ouvre. 10 secondes pour graver tes chapitres dans ta tête. Puis il se referme.</p></div>'
         '<div><em>5 €</em><p>Le prix d’un sandwich. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
         '</div>',
         unsafe_allow_html=True,
     )
 
 
+def revelation(chapitres, reference, duree):
+    """Le dossier affiché pendant `duree` secondes, dans un cadre protégé :
+    filigrane de l'acheteur, floutage si la fenêtre perd le focus, pas de clic droit, de copie ni d'impression."""
+    cartes = "".join(
+        f'<div class="r"><div class="n">{n:02d}</div><div><div class="l">Exercice {n}</div><div class="c">{c}</div></div></div>'
+        for n, c, origine in chapitres
+    )
+    filigrane = "".join(f"<span>{reference} · PHILIPPE · {reference}</span>" for _ in range(40))
+    return (GABARIT_REVELATION.replace("__CARTES__", cartes)
+            .replace("__FILIGRANE__", filigrane).replace("__DUREE__", str(duree)))
+
+
+GABARIT_REVELATION = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500&display=swap');
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #000; color: #f4f4f1; font-family: 'IBM Plex Mono', monospace;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overflow: hidden; }
+#zone { position: relative; padding: 4px 2px; transition: filter .15s; }
+body.flou #zone { filter: blur(22px); }
+.temps { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #8b8b86; margin-bottom: 8px; }
+.temps b { color: #f4f4f1; font-family: 'Archivo Black', sans-serif; font-size: 18px; letter-spacing: 0; }
+.barre { height: 3px; background: #2a2a28; margin-bottom: 14px; }
+.barre i { display: block; height: 100%; background: #f4f4f1; width: 100%; transition: width .1s linear; }
+.r { display: grid; grid-template-columns: 70px 1fr; gap: 14px; align-items: center; border: 1px solid #2a2a28;
+     border-left: 4px solid #f4f4f1; padding: 14px 18px; margin-bottom: 8px; }
+.n { font-family: 'Archivo Black', sans-serif; font-size: 34px; line-height: 1; }
+.l { font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #8b8b86; }
+.c { font-family: 'Archivo Black', sans-serif; font-size: 20px; text-transform: uppercase; line-height: 1.15; }
+.fil { position: absolute; inset: -60px; display: flex; flex-wrap: wrap; gap: 26px 40px; transform: rotate(-18deg);
+       opacity: .14; pointer-events: none; font-size: 12px; letter-spacing: .15em; z-index: 2; }
+.ferme { height: 100vh; display: grid; place-items: center; text-align: center; font-family: 'Archivo Black', sans-serif;
+         text-transform: uppercase; letter-spacing: .2em; font-size: 16px; color: #8b8b86; }
+@media print { body { display: none !important; } }
+</style>
+<div id="zone">
+  <div class="temps"><span>Dossier ouvert · ne pas diffuser</span><b id="t">__DUREE__</b></div>
+  <div class="barre"><i id="b"></i></div>
+  __CARTES__
+  <div class="fil">__FILIGRANE__</div>
+</div>
+<script>
+const total = __DUREE__ * 1000, debut = Date.now();
+const fermer = () => { document.body.innerHTML = '<div class="ferme">Dossier refermé.</div>'; };
+const tic = setInterval(() => {
+  const reste = total - (Date.now() - debut);
+  if (reste <= 0) { clearInterval(tic); fermer(); return; }
+  document.getElementById('t').textContent = Math.ceil(reste / 1000);
+  document.getElementById('b').style.width = (reste / total * 100) + '%';
+}, 100);
+const flou = (on) => document.body.classList.toggle('flou', on);
+let parent = null;
+try { parent = window.parent; } catch (e) {}
+for (const w of [window, parent]) {
+  if (!w) continue;
+  try {
+    w.addEventListener('blur', () => flou(true));
+    w.addEventListener('focus', () => flou(false));
+    w.document.addEventListener('visibilitychange', () => flou(w.document.hidden));
+    w.addEventListener('keydown', (e) => {
+      if (e.key === 'PrintScreen' || (e.metaKey && e.shiftKey)) { flou(true); setTimeout(() => flou(false), 1500); }
+    });
+    w.addEventListener('beforeprint', () => flou(true));
+  } catch (e) {}
+}
+['contextmenu', 'copy', 'cut', 'dragstart', 'selectstart'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+</script>
+"""
+
+
 def page_dossier():
     st.markdown(BARRE, unsafe_allow_html=True)
+    if st.session_state.get("ferme"):
+        st.markdown(
+            '<div class="tampon">Refermé</div>'
+            '<h1 class="titre" style="font-size:clamp(2.2rem,6vw,4.6rem)">Le dossier<br>s’est refermé.</h1>'
+            '<p class="sous">Philippe ne parle qu’une fois. À toi de jouer maintenant.</p>',
+            unsafe_allow_html=True,
+        )
+        return
+
     st.markdown(
         '<div class="tampon entree">Déclassifié</div>'
-        '<h1 class="titre entree d2" style="font-size:clamp(2.2rem,6vw,4.6rem)">Philippe a parlé.</h1>',
+        '<h1 class="titre entree d2" style="font-size:clamp(2.2rem,6vw,4.6rem)">Philippe va parler.</h1>'
+        f'<p class="sous">Choisis ta spé et ton jour. Tu auras <b>{DUREE} secondes</b>, une seule fois. '
+        'Prépare-toi à retenir.</p>',
         unsafe_allow_html=True,
     )
     col1, col2 = st.columns(2)
@@ -309,12 +394,11 @@ def page_dossier():
     if not nom or not jour:
         return
 
-    lignes = "".join(
-        f'<div class="resultat" style="--i:{n}"><div class="n">{n:02d}</div>'
-        f'<div><div class="l">Exercice {n}</div><div class="c">{chapitre}</div></div></div>'
-        for n, chapitre, origine in tous_les_pronostics()[(MATIERES[nom], jour)]
-    )
-    st.markdown(f'<div style="margin-top:18px">{lignes}</div>', unsafe_allow_html=True)
+    if st.button(f"Révéler · {DUREE} secondes", width="stretch"):
+        st.session_state.ferme = True          # au prochain rechargement, le dossier est refermé
+        chapitres = tous_les_pronostics()[(MATIERES[nom], jour)]
+        components.html(revelation(chapitres, st.session_state.reference, DUREE),
+                        height=96 + 92 * len(chapitres))
 
 
 if st.session_state.debloque:
