@@ -1,0 +1,7 @@
+# Thème du site Philippe : tout en sombre, pour que chaque texte soit clair sur fond noir.
+[theme]
+base = "dark"
+backgroundColor = "#000000"
+secondaryBackgroundColor = "#0c0c0b"
+textColor = "#f4f4f1"
+primaryColor = "#f4f4f1"

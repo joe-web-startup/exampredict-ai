@@ -157,6 +157,8 @@ p, li { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 .stButton > button:focus-visible, .stLinkButton > a:focus-visible { outline: 2px solid var(--blanc); outline-offset: 4px; }
 [data-testid="stTextInput"] input { background: #0c0c0b !important; color: var(--blanc) !important; border-radius: 0 !important;
   font-family: 'IBM Plex Mono', monospace !important; letter-spacing: .15em; border: 1px solid var(--trait) !important; }
+[data-testid="stRadio"] label p, [data-testid="stCheckbox"] label p { color: var(--blanc) !important; }
+[data-testid="stCaptionContainer"] { color: var(--gris) !important; }
 [data-testid="stWidgetLabel"] p { font-size: .7rem !important; letter-spacing: .2em; text-transform: uppercase; color: var(--gris) !important; }
 [data-testid="stButtonGroup"] button { border-radius: 0 !important; background: transparent !important; color: var(--blanc) !important;
   border: 1px solid var(--trait) !important; font-family: 'IBM Plex Mono', monospace !important; letter-spacing: .1em; text-transform: uppercase; }
