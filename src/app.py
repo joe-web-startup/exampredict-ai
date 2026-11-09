@@ -19,7 +19,11 @@
 #   specialites = "entry.555"
 #   jour = "entry.666"
 
+import base64
+import hashlib
+import hmac
 import html
+import json
 import re
 import smtplib
 from email.message import EmailMessage
@@ -47,6 +51,7 @@ GMAIL_MOT_DE_PASSE = reglage("GMAIL_MOT_DE_PASSE", "")
 CHAMPS = dict(reglage("CHAMPS", {}))
 CONTACT = reglage("CONTACT", "")
 CODE_ADMIN = reglage("CODE_ADMIN", "")
+CLE_LIENS = reglage("CLE_LIENS", "") or CODE_ADMIN   # signe les liens personnels (sinon : le code admin)
 DUREE = int(reglage("DUREE_REVELATION", 10))   # secondes d'affichage des chapitres (vue admin)
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
 URL_SITE = "https://heyphilippe-bac.streamlit.app/"
@@ -110,6 +115,32 @@ def envoyer_email(infos):
     except (smtplib.SMTPException, OSError):
         return False
     return True
+
+
+def signature(contenu):
+    return hmac.new(CLE_LIENS.encode(), contenu.encode(), hashlib.sha256).hexdigest()[:20]
+
+
+def creer_lien(prenom, specialites, jours):
+    """Lien personnel : prénom + spés + jours, signé. Impossible à modifier sans casser la signature."""
+    donnees = json.dumps({"p": prenom, "s": [MATIERES[n] for n in specialites], "j": jours},
+                         separators=(",", ":"), ensure_ascii=False)
+    contenu = base64.urlsafe_b64encode(donnees.encode()).decode().rstrip("=")
+    return f"{URL_SITE}?d={contenu}.{signature(contenu)}"
+
+
+def lire_lien(jeton):
+    """Renvoie (prénom, codes des spés, jours) si le lien est authentique, sinon None."""
+    try:
+        contenu, signe = jeton.rsplit(".", 1)
+        if not CLE_LIENS or not hmac.compare_digest(signe, signature(contenu)):
+            return None
+        d = json.loads(base64.urlsafe_b64decode(contenu + "=" * (-len(contenu) % 4)))
+        codes = [c for c in d["s"] if c in MATIERES.values()]
+        jours = [j for j in d["j"] if j in (1, 2)]
+        return (str(d["p"])[:40], codes, jours) if codes and jours else None
+    except (ValueError, KeyError, TypeError):
+        return None
 
 
 @st.cache_data
@@ -196,6 +227,17 @@ p, li { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 @media (max-width: 780px) { .raisons { grid-template-columns: 1fr; } .raisons div { border-right: 0 !important; border-bottom: 1px solid var(--trait) !important; } }
 
 /* Bloc d'accès */
+/* Dossier dévoilé (lien personnel) */
+.devoile { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.devoile .colonne { border-bottom: 1px solid var(--trait); }
+.devoile .ligne { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+.devoile .ligne b { position: relative; display: inline-block; justify-self: start; font-family: 'Archivo Black', sans-serif;
+  font-weight: 400; font-size: 1.02rem; line-height: 1.2; text-transform: uppercase; color: var(--blanc); }
+.devoile .ligne b::after { content: ""; position: absolute; inset: -2px -4px; background: var(--blanc);
+  transform-origin: right; animation: leve .7s cubic-bezier(.7,0,.2,1) both; animation-delay: var(--t, 1s); }
+@keyframes leve { to { transform: scaleX(0); } }
+.filigrane { font-size: .7rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gris);
+  border-top: 1px solid var(--trait); padding-top: 14px; margin-top: 8px; }
 .merci { text-align: center; padding: 6px 0 4px; }
 .merci .etiquette { display: inline-block; }
 .merci-titre { font-family: 'Archivo Black', sans-serif !important; font-size: clamp(2rem, 6vw, 3rem);
@@ -480,8 +522,72 @@ for (const w of [window, parent]) {
 """
 
 
+def page_lien(jeton):
+    st.markdown(BARRE, unsafe_allow_html=True)
+    lu = lire_lien(jeton)
+    if not lu:
+        st.markdown(
+            '<div class="tampon">Accès refusé</div>'
+            '<h1 class="titre" style="font-size:clamp(2.2rem,6vw,4.6rem)">Lien invalide.</h1>'
+            '<p class="sous">Ce dossier n’existe pas, ou le lien a été modifié. '
+            f'Fais ta demande sur <b>{URL_SITE}</b></p>',
+            unsafe_allow_html=True,
+        )
+        return
+    prenom, codes, jours = lu
+    noms = {code: nom for nom, code in MATIERES.items()}
+    pronos = tous_les_pronostics()
+    colonnes, delai = "", 1.1
+    for code in codes:
+        for j in jours:
+            lignes = ""
+            for n, chapitre, origine in pronos[(code, j)]:
+                lignes += (f'<div class="ligne"><span>EXERCICE {n}</span>'
+                           f'<b style="--t:{delai:.2f}s">{html.escape(chapitre)}</b></div>')
+                delai += 0.18
+            colonnes += f'<div class="colonne"><h4>{noms[code]} · Jour {j}</h4>{lignes}</div>'
+    st.markdown(
+        '<div class="tampon entree">Déclassifié</div>'
+        f'<h1 class="titre entree d2" style="font-size:clamp(2.2rem,6vw,4.6rem)">Ton dossier,<br>{html.escape(prenom)}.</h1>'
+        '<p class="sous entree d3">Philippe a calculé <b>un chapitre pour chaque exercice</b> de ton épreuve. '
+        'Commence tes révisions par ceux-là.</p>'
+        f'<div class="dossier devoile">{colonnes}</div>'
+        f'<div class="filigrane">Dossier personnel de {html.escape(prenom)} · Ne pas diffuser · Philippe · Bac 2027</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def generateur_liens():
+    st.markdown('<div class="etiquette" style="margin-top:28px">Créer le lien d’un élève</div>', unsafe_allow_html=True)
+    if not CLE_LIENS:
+        st.error("Ajoute CODE_ADMIN (ou CLE_LIENS) dans les Secrets pour signer les liens.")
+        return
+    with st.form("lien", border=False):
+        prenom = st.text_input("Prénom de l’élève")
+        specialites = st.pills("Spés", list(MATIERES), selection_mode="multi")
+        jour = st.radio("Jour", ["Jour 1", "Jour 2", "Les deux"], horizontal=True)
+        if st.form_submit_button("Créer le lien", width="stretch"):
+            if not prenom.strip() or not specialites:
+                st.error("Il manque le prénom ou les spés.")
+            else:
+                jours = {"Jour 1": [1], "Jour 2": [2]}.get(jour, [1, 2])
+                lien = creer_lien(prenom.strip(), specialites, jours)
+                st.caption("Le lien (copie-le avec l’icône à droite) :")
+                st.code(lien, language=None)
+                st.caption("Le message à envoyer :")
+                st.code(
+                    f"Salut {prenom.strip()},\n\n"
+                    "Ton dossier Philippe est prêt. Tes chapitres, exercice par exercice, sont ici :\n"
+                    f"{lien}\n\n"
+                    "Ce lien est personnel, garde-le pour toi.\n\n"
+                    "Philippe · Bac 2027",
+                    language=None, wrap_lines=True,
+                )
+
+
 def page_dossier():
     st.markdown(BARRE, unsafe_allow_html=True)
+    generateur_liens()
     if st.session_state.get("ferme"):
         st.markdown(
             '<div class="tampon">Refermé</div>'
@@ -513,7 +619,9 @@ def page_dossier():
                         height=96 + 92 * len(chapitres))
 
 
-if st.session_state.debloque:
+if "d" in st.query_params:
+    page_lien(st.query_params["d"])
+elif st.session_state.debloque:
     page_dossier()
 else:
     page_intro()
