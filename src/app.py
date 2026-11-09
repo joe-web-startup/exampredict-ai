@@ -162,7 +162,8 @@ p, li { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 [data-testid="stWidgetLabel"] p { font-size: .7rem !important; letter-spacing: .2em; text-transform: uppercase; color: var(--gris) !important; }
 [data-testid="stButtonGroup"] button { border-radius: 0 !important; background: transparent !important; color: var(--blanc) !important;
   border: 1px solid var(--trait) !important; font-family: 'IBM Plex Mono', monospace !important; letter-spacing: .1em; text-transform: uppercase; }
-[data-testid="stButtonGroup"] button[aria-checked="true"], [data-testid="stButtonGroup"] button[kind$="Active"] {
+[data-testid="stButtonGroup"] button[aria-checked="true"], [data-testid="stButtonGroup"] button[aria-pressed="true"],
+[data-testid="stButtonGroup"] button[kind$="Active"] {
   background: var(--blanc) !important; color: var(--noir) !important; }
 
 /* Résultats déclassifiés */
@@ -241,8 +242,13 @@ def bloc_inscription():
             "Elles ne sont ni vendues ni partagées, et je peux demander leur suppression à tout moment."
         )
         if st.form_submit_button("Recevoir mes chapitres", width="stretch"):
-            if not prenom.strip() or not EMAIL_VALIDE.match(email.strip()) or not specialites:
-                st.error("Il manque ton prénom, un e-mail valide ou tes spés.")
+            manque = [libelle for libelle, ok in [
+                ("ton prénom", prenom.strip()),
+                ("un e-mail valide", EMAIL_VALIDE.match(email.strip())),
+                ("au moins une spé (clique dessus : elle devient blanche)", specialites),
+            ] if not ok]
+            if manque:
+                st.error("Il manque " + ", ".join(manque) + ".")
             elif not accord:
                 st.error("Coche la case d’accord pour recevoir tes chapitres.")
             elif not FORMULAIRE:
