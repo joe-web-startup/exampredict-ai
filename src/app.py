@@ -19,6 +19,7 @@
 #   specialites = "entry.555"
 #   jour = "entry.666"
 
+import html
 import re
 import smtplib
 from email.message import EmailMessage
@@ -195,6 +196,11 @@ p, li { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 @media (max-width: 780px) { .raisons { grid-template-columns: 1fr; } .raisons div { border-right: 0 !important; border-bottom: 1px solid var(--trait) !important; } }
 
 /* Bloc d'accès */
+.merci { text-align: center; padding: 6px 0 4px; }
+.merci .etiquette { display: inline-block; }
+.merci-titre { font-family: 'Archivo Black', sans-serif !important; font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.02; text-transform: uppercase; margin: 14px 0 12px; color: var(--blanc); }
+.merci p { color: var(--blanc); font-size: 1rem; line-height: 1.5; }
 .acces { border: 1px solid var(--blanc); padding: 22px 22px 6px; margin: 0 0 14px; }
 .virement { display: grid; gap: 8px; margin: 14px 0 6px; }
 .virement div { display: grid; grid-template-columns: 170px 1fr; gap: 12px; border-top: 1px dashed var(--trait); padding-top: 8px; }
@@ -266,8 +272,23 @@ def grille_cachee():
     return f'<div class="dossier defile">{colonnes}</div>'
 
 
+@st.dialog(" ", width="medium")
+def fenetre_merci(prenom):
+    """La fenêtre qui se superpose au site juste après la demande."""
+    st.markdown(
+        '<div class="merci"><div class="etiquette">Demande reçue</div>'
+        f'<div class="merci-titre">Merci à toi,<br>{html.escape(prenom)}.</div>'
+        '<p>Tu vas recevoir un <b>e-mail</b> ou un <b>SMS</b> avec les éléments de ta demande.</p></div>',
+        unsafe_allow_html=True,
+    )
+    if st.button("Fermer", width="stretch"):
+        st.rerun()
+
+
 def bloc_inscription():
     if st.session_state.inscrit:
+        if st.session_state.pop("fenetre", None):      # une seule fois, juste après l'envoi
+            fenetre_merci(st.session_state.prenom)
         st.markdown(
             '<div class="acces"><div class="etiquette">Demande reçue</div>'
             '<div class="prix">C’est noté.</div>'
@@ -323,6 +344,8 @@ def bloc_inscription():
                     if GMAIL_ADRESSE and GMAIL_MOT_DE_PASSE:      # envoi automatique, seulement s'il est configuré
                         envoyer_email(infos)
                     st.session_state.inscrit = infos["email"]
+                    st.session_state.prenom = infos["prenom"]
+                    st.session_state.fenetre = True
                     st.rerun()
                 else:
                     st.error("Ta demande n’est pas passée. Réessaie dans un instant.")
