@@ -3,21 +3,25 @@
 # Lancer en local, depuis la racine du projet :
 #   py -m streamlit run src/app.py
 #
-# Les inscriptions sont envoyées vers un Google Form (donc rangées dans un Google Sheet).
+# À l'inscription, Philippe envoie AUSSITÔT les chapitres par e-mail (Gmail), et une copie de
+# l'inscription arrive dans ta boîte : c'est ta liste d'inscrits. Le Google Form est facultatif.
 # Réglages SECRETS (jamais sur GitHub) : .streamlit/secrets.toml en local,
 # onglet « Secrets » de Streamlit Cloud en ligne :
-#   FORMULAIRE = "https://docs.google.com/forms/d/e/XXXX/formResponse"
+#   GMAIL_ADRESSE     = "philippe.bac2027@gmail.com"   # la boîte Gmail qui envoie les chapitres
+#   GMAIL_MOT_DE_PASSE = "abcd efgh ijkl mnop"         # « mot de passe d'application » Gmail (16 lettres)
+#   FORMULAIRE = "https://docs.google.com/forms/d/e/XXXX/formResponse"   # facultatif
 #   CONTACT    = "philippe.bac2027@gmail.com"     # adresse affichée pour les questions et la suppression des données
 #   CODE_ADMIN = "..."                            # ton accès au dossier (avec ?admin à la fin du lien)
 #   [CHAMPS]                                      # les identifiants « entry.XXXX » de chaque question du Google Form
 #   prenom = "entry.111"
 #   nom = "entry.222"
 #   email = "entry.333"
-#   telephone = "entry.444"
 #   specialites = "entry.555"
 #   jour = "entry.666"
 
 import re
+import smtplib
+from email.message import EmailMessage
 
 import requests
 import streamlit as st
@@ -37,11 +41,14 @@ def reglage(nom, defaut):
 
 
 FORMULAIRE = reglage("FORMULAIRE", "")
+GMAIL_ADRESSE = reglage("GMAIL_ADRESSE", "")
+GMAIL_MOT_DE_PASSE = reglage("GMAIL_MOT_DE_PASSE", "")
 CHAMPS = dict(reglage("CHAMPS", {}))
 CONTACT = reglage("CONTACT", "")
 CODE_ADMIN = reglage("CODE_ADMIN", "")
 DUREE = int(reglage("DUREE_REVELATION", 10))   # secondes d'affichage des chapitres (vue admin)
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
+URL_SITE = "https://heyphilippe-bac.streamlit.app/"
 EMAIL_VALIDE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -53,6 +60,54 @@ def envoyer_inscription(infos):
     except requests.RequestException:
         return False
     return reponse.status_code == 200
+
+
+def texte_chapitres(specialites, jour):
+    """Les chapitres pronostiqués pour les spés et le jour choisis, en texte simple."""
+    pronos = tous_les_pronostics()
+    jours = [1, 2] if jour not in ("Jour 1", "Jour 2") else [int(jour[-1])]
+    blocs = []
+    for nom in specialites:
+        for j in jours:
+            lignes = "\n".join(f"  Exercice {n} : {chap}" for n, chap, origine in pronos[(MATIERES[nom], j)])
+            blocs.append(f"{nom.upper()} · JOUR {j}\n{lignes}")
+    return "\n\n".join(blocs)
+
+
+def envoyer_email(infos):
+    """Envoie les chapitres à l'élève, et une copie de l'inscription à Philippe. True si c'est parti."""
+    corps = (
+        f"Bonjour {infos['prenom']},\n\n"
+        "Voici ton dossier. Philippe a calculé un chapitre pour chaque exercice de ton épreuve :\n\n"
+        f"{texte_chapitres(infos['specialites_liste'], infos['jour'])}\n\n"
+        "Commence par ceux-là. Bonne dernière ligne droite.\n\n"
+        "Philippe · Bac 2027\n"
+        f"{URL_SITE}\n\n"
+        "Pour ne plus rien recevoir ou supprimer tes données, réponds simplement à cet e-mail."
+    )
+    message = EmailMessage()
+    message["Subject"] = "Ton dossier Philippe · Bac 2027"
+    message["From"] = f"Philippe · Bac 2027 <{GMAIL_ADRESSE}>"
+    message["To"] = infos["email"]
+    message["Reply-To"] = GMAIL_ADRESSE
+    message.set_content(corps)
+
+    copie = EmailMessage()                       # ta liste d'inscrits, dans ta propre boîte
+    copie["Subject"] = f"Nouvel inscrit : {infos['prenom']} {infos['nom']} · {infos['specialites']}"
+    copie["From"] = GMAIL_ADRESSE
+    copie["To"] = GMAIL_ADRESSE
+    copie.set_content(
+        f"Prénom : {infos['prenom']}\nNom : {infos['nom']}\nE-mail : {infos['email']}\n"
+        f"Spés : {infos['specialites']}\nJour : {infos['jour']}"
+    )
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as serveur:
+            serveur.login(GMAIL_ADRESSE, GMAIL_MOT_DE_PASSE.replace(" ", ""))
+            serveur.send_message(message)
+            serveur.send_message(copie)
+    except (smtplib.SMTPException, OSError):
+        return False
+    return True
 
 
 @st.cache_data
@@ -215,8 +270,8 @@ def bloc_inscription():
         st.markdown(
             '<div class="acces"><div class="etiquette">Inscription reçue</div>'
             '<div class="prix">C’est noté.</div>'
-            '<p class="sous">Philippe t’envoie tes chapitres, exercice par exercice. Surveille ta boîte mail '
-            '(et tes spams).</p></div>',
+            f'<p class="sous">Philippe vient d’envoyer tes chapitres à <b>{st.session_state.inscrit}</b>. '
+            'Ouvre ta boîte mail maintenant (regarde aussi dans les spams).</p></div>',
             unsafe_allow_html=True,
         )
         return
@@ -224,7 +279,7 @@ def bloc_inscription():
     st.markdown(
         '<div class="acces"><div class="etiquette">Accès au dossier</div>'
         '<div class="prix">Gratuit.</div>'
-        '<p class="sous">Laisse tes coordonnées : Philippe t’envoie <b>tes chapitres, exercice par exercice</b>, '
+        '<p class="sous">Laisse ton e-mail : Philippe t’envoie <b>tout de suite</b> tes chapitres, exercice par exercice, '
         'pour ta spé et ton jour.</p></div>',
         unsafe_allow_html=True,
     )
@@ -232,9 +287,7 @@ def bloc_inscription():
         col1, col2 = st.columns(2)
         prenom = col1.text_input("Prénom *")
         nom = col2.text_input("Nom")
-        col3, col4 = st.columns(2)
-        email = col3.text_input("E-mail *")
-        telephone = col4.text_input("Téléphone (pour recevoir par SMS, facultatif)")
+        email = st.text_input("E-mail * (Philippe t’y envoie tes chapitres tout de suite)")
         specialites = st.pills("Tes spés *", list(MATIERES), selection_mode="multi")
         jour = st.radio("Ton jour d’épreuve", ["Jour 1", "Jour 2", "Je ne sais pas encore"], horizontal=True)
         accord = st.checkbox(
@@ -251,16 +304,19 @@ def bloc_inscription():
                 st.error("Il manque " + ", ".join(manque) + ".")
             elif not accord:
                 st.error("Coche la case d’accord pour recevoir tes chapitres.")
-            elif not FORMULAIRE:
-                st.error("Les inscriptions ouvrent très bientôt. Reviens dans quelques jours.")
-            elif envoyer_inscription({
-                "prenom": prenom.strip(), "nom": nom.strip(), "email": email.strip(),
-                "telephone": telephone.strip(), "specialites": ", ".join(specialites), "jour": jour,
-            }):
-                st.session_state.inscrit = True
-                st.rerun()
             else:
-                st.error("L’envoi a échoué. Réessaie dans un instant.")
+                infos = {
+                    "prenom": prenom.strip(), "nom": nom.strip(), "email": email.strip(),
+                    "specialites": ", ".join(specialites),
+                    "specialites_liste": list(specialites), "jour": jour,
+                }
+                if FORMULAIRE:
+                    envoyer_inscription({k: v for k, v in infos.items() if k != "specialites_liste"})
+                if GMAIL_ADRESSE and GMAIL_MOT_DE_PASSE and envoyer_email(infos):
+                    st.session_state.inscrit = infos["email"]
+                    st.rerun()
+                else:
+                    st.error("L’envoi de ton dossier a échoué. Réessaie dans un instant.")
     if CONTACT:
         st.caption(f"Une question, ou supprimer tes données : {CONTACT}")
 
@@ -315,7 +371,7 @@ def page_intro():
         'un chapitre pour chacun, jour 1 et jour 2.</p></div>'
         '<div><em>Révise dans le bon ordre</em><p>Les autres révisent tout au même niveau. '
         'Toi, tu sais par où commencer.</p></div>'
-        '<div><em>Envoyé chez toi</em><p>Ton e-mail, ton numéro si tu veux : Philippe t’envoie tes chapitres, exercice par exercice, pour ta spé et ton jour.</p></div>'
+        '<div><em>Instantané</em><p>Tu t’inscris, Philippe t’envoie tes chapitres par e-mail dans la seconde. Exercice par exercice, pour ta spé et ton jour.</p></div>'
         '<div><em>Gratuit</em><p>Aucun paiement. Juste ton inscription. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
         '</div>',
         unsafe_allow_html=True,
