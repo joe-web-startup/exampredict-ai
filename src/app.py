@@ -49,6 +49,7 @@ CODE_ADMIN = reglage("CODE_ADMIN", "")
 DUREE = int(reglage("DUREE_REVELATION", 10))   # secondes d'affichage des chapitres (vue admin)
 MATIERES = {"Physique-chimie": "physique-chimie", "SVT": "svt", "Maths": "maths"}
 URL_SITE = "https://heyphilippe-bac.streamlit.app/"
+SOUTIENS = ["0 euros", "2 euros", "7 euros"]   # exactement les choix du Google Form
 EMAIL_VALIDE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -286,10 +287,13 @@ def bloc_inscription():
     with st.form("inscription", border=False):
         col1, col2 = st.columns(2)
         prenom = col1.text_input("Prénom *")
-        nom = col2.text_input("Nom")
-        email = st.text_input("E-mail * (Philippe t’y envoie ton dossier)")
+        nom = col2.text_input("Nom *")
+        col3, col4 = st.columns(2)
+        email = col3.text_input("E-mail * (Philippe t’y envoie ton dossier)")
+        telephone = col4.text_input("Téléphone *")
         specialites = st.pills("Tes spés *", list(MATIERES), selection_mode="multi")
         jour = st.radio("Ton jour d’épreuve", ["Jour 1", "Jour 2", "Je ne sais pas encore"], horizontal=True)
+        soutien = st.radio("Soutenir Hey Philippe à hauteur de", SOUTIENS, horizontal=True)
         accord = st.checkbox(
             "J’accepte que ces informations servent uniquement à m’envoyer les pronostics de Philippe. "
             "Elles ne sont ni vendues ni partagées, et je peux demander leur suppression à tout moment."
@@ -297,7 +301,9 @@ def bloc_inscription():
         if st.form_submit_button("Demander mon dossier", width="stretch"):
             manque = [libelle for libelle, ok in [
                 ("ton prénom", prenom.strip()),
+                ("ton nom", nom.strip()),
                 ("un e-mail valide", EMAIL_VALIDE.match(email.strip())),
+                ("ton téléphone", len(re.sub(r"\D", "", telephone)) >= 8),
                 ("au moins une spé (clique dessus : elle devient blanche)", specialites),
             ] if not ok]
             if manque:
@@ -307,8 +313,9 @@ def bloc_inscription():
             else:
                 infos = {
                     "prenom": prenom.strip(), "nom": nom.strip(), "email": email.strip(),
-                    "specialites": ", ".join(specialites),
-                    "specialites_liste": list(specialites), "jour": jour,
+                    "telephone": telephone.strip(),
+                    "specialites": ", ".join(specialites) + " · " + jour,   # le jour va dans la colonne SPE
+                    "specialites_liste": list(specialites), "jour": jour, "soutien": soutien,
                 }
                 ok = FORMULAIRE and envoyer_inscription(
                     {k: v for k, v in infos.items() if k != "specialites_liste"})
