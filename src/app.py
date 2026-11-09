@@ -3,13 +3,13 @@
 # Lancer en local, depuis la racine du projet :
 #   py -m streamlit run src/app.py
 #
-# À l'inscription, Philippe envoie AUSSITÔT les chapitres par e-mail (Gmail), et une copie de
-# l'inscription arrive dans ta boîte : c'est ta liste d'inscrits. Le Google Form est facultatif.
+# Chaque demande est rangée dans TON Google Sheet (via un Google Form). Tu envoies ensuite le dossier
+# par e-mail. Facultatif : avec GMAIL_ADRESSE et GMAIL_MOT_DE_PASSE, l'envoi devient automatique.
 # Réglages SECRETS (jamais sur GitHub) : .streamlit/secrets.toml en local,
 # onglet « Secrets » de Streamlit Cloud en ligne :
 #   GMAIL_ADRESSE     = "philippe.bac2027@gmail.com"   # la boîte Gmail qui envoie les chapitres
 #   GMAIL_MOT_DE_PASSE = "abcd efgh ijkl mnop"         # « mot de passe d'application » Gmail (16 lettres)
-#   FORMULAIRE = "https://docs.google.com/forms/d/e/XXXX/formResponse"   # facultatif
+#   FORMULAIRE = "https://docs.google.com/forms/d/e/XXXX/formResponse"   # obligatoire
 #   CONTACT    = "philippe.bac2027@gmail.com"     # adresse affichée pour les questions et la suppression des données
 #   CODE_ADMIN = "..."                            # ton accès au dossier (avec ?admin à la fin du lien)
 #   [CHAMPS]                                      # les identifiants « entry.XXXX » de chaque question du Google Form
@@ -268,10 +268,10 @@ def grille_cachee():
 def bloc_inscription():
     if st.session_state.inscrit:
         st.markdown(
-            '<div class="acces"><div class="etiquette">Inscription reçue</div>'
+            '<div class="acces"><div class="etiquette">Demande reçue</div>'
             '<div class="prix">C’est noté.</div>'
-            f'<p class="sous">Philippe vient d’envoyer tes chapitres à <b>{st.session_state.inscrit}</b>. '
-            'Ouvre ta boîte mail maintenant (regarde aussi dans les spams).</p></div>',
+            f'<p class="sous">Ta demande est enregistrée. Philippe t’envoie ton dossier à '
+            f'<b>{st.session_state.inscrit}</b>. Surveille ta boîte mail (et tes spams).</p></div>',
             unsafe_allow_html=True,
         )
         return
@@ -279,7 +279,7 @@ def bloc_inscription():
     st.markdown(
         '<div class="acces"><div class="etiquette">Accès au dossier</div>'
         '<div class="prix">Gratuit.</div>'
-        '<p class="sous">Laisse ton e-mail : Philippe t’envoie <b>tout de suite</b> tes chapitres, exercice par exercice, '
+        '<p class="sous">Fais ta demande : Philippe t’envoie <b>ton dossier par e-mail</b>, tes chapitres exercice par exercice, '
         'pour ta spé et ton jour.</p></div>',
         unsafe_allow_html=True,
     )
@@ -287,14 +287,14 @@ def bloc_inscription():
         col1, col2 = st.columns(2)
         prenom = col1.text_input("Prénom *")
         nom = col2.text_input("Nom")
-        email = st.text_input("E-mail * (Philippe t’y envoie tes chapitres tout de suite)")
+        email = st.text_input("E-mail * (Philippe t’y envoie ton dossier)")
         specialites = st.pills("Tes spés *", list(MATIERES), selection_mode="multi")
         jour = st.radio("Ton jour d’épreuve", ["Jour 1", "Jour 2", "Je ne sais pas encore"], horizontal=True)
         accord = st.checkbox(
             "J’accepte que ces informations servent uniquement à m’envoyer les pronostics de Philippe. "
             "Elles ne sont ni vendues ni partagées, et je peux demander leur suppression à tout moment."
         )
-        if st.form_submit_button("Recevoir mes chapitres", width="stretch"):
+        if st.form_submit_button("Demander mon dossier", width="stretch"):
             manque = [libelle for libelle, ok in [
                 ("ton prénom", prenom.strip()),
                 ("un e-mail valide", EMAIL_VALIDE.match(email.strip())),
@@ -303,20 +303,22 @@ def bloc_inscription():
             if manque:
                 st.error("Il manque " + ", ".join(manque) + ".")
             elif not accord:
-                st.error("Coche la case d’accord pour recevoir tes chapitres.")
+                st.error("Coche la case d’accord pour envoyer ta demande.")
             else:
                 infos = {
                     "prenom": prenom.strip(), "nom": nom.strip(), "email": email.strip(),
                     "specialites": ", ".join(specialites),
                     "specialites_liste": list(specialites), "jour": jour,
                 }
-                if FORMULAIRE:
-                    envoyer_inscription({k: v for k, v in infos.items() if k != "specialites_liste"})
-                if GMAIL_ADRESSE and GMAIL_MOT_DE_PASSE and envoyer_email(infos):
+                ok = FORMULAIRE and envoyer_inscription(
+                    {k: v for k, v in infos.items() if k != "specialites_liste"})
+                if ok:
+                    if GMAIL_ADRESSE and GMAIL_MOT_DE_PASSE:      # envoi automatique, seulement s'il est configuré
+                        envoyer_email(infos)
                     st.session_state.inscrit = infos["email"]
                     st.rerun()
                 else:
-                    st.error("L’envoi de ton dossier a échoué. Réessaie dans un instant.")
+                    st.error("Ta demande n’est pas passée. Réessaie dans un instant.")
     if CONTACT:
         st.caption(f"Une question, ou supprimer tes données : {CONTACT}")
 
@@ -371,7 +373,7 @@ def page_intro():
         'un chapitre pour chacun, jour 1 et jour 2.</p></div>'
         '<div><em>Révise dans le bon ordre</em><p>Les autres révisent tout au même niveau. '
         'Toi, tu sais par où commencer.</p></div>'
-        '<div><em>Instantané</em><p>Tu t’inscris, Philippe t’envoie tes chapitres par e-mail dans la seconde. Exercice par exercice, pour ta spé et ton jour.</p></div>'
+        '<div><em>Envoyé chez toi</em><p>Tu fais ta demande, Philippe t’envoie ton dossier par e-mail. Exercice par exercice, pour ta spé et ton jour.</p></div>'
         '<div><em>Gratuit</em><p>Aucun paiement. Juste ton inscription. Pour l’épreuve qui pèse le plus dans ton bac.</p></div>'
         '</div>',
         unsafe_allow_html=True,
